@@ -8,8 +8,8 @@ var express = require('express'),
     date = new Date();
 
 var currentDate = date.getDate() + '-' + date.getMonth() + 1 + '-' + date.getFullYear(),
-    logDIR = __dirname + '\\logs',
-    logFileName = logDIR + '\\serverlogs-' + currentDate + '.log';
+    logDIR = __dirname + '/logs',
+    logFileName = logDIR + '/access_logs-' + currentDate + '.log';
 
 fileStream.existsSync(logDIR) || fileStream.mkdirSync(logDIR);
 var accessLogStream = loggerRotator.getStream({
