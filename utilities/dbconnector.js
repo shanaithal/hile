@@ -6,7 +6,7 @@ var mongoose = require('mongoose'),
         '_id': 0,
         '__v': 0
     };
-mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/hile');
+mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
 
 exports.createUser = function(callback, userObject) {
     var user = new User({
