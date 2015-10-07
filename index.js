@@ -222,7 +222,7 @@ app.put('/users/:email/homes/:home_name/products/:product_name', function(reques
 app.get('/products', function(request, response) {
     var productObj = getQueryObject(request);
     connector.getProducts(function(products) {
-        if (products  !== undefined && isNaN(products)) {
+        if (products !== undefined && isNaN(products)) {
             response.statusCode = 200;
             response.send(products);
         } else {
@@ -235,7 +235,7 @@ app.get('/products/:product_name', function(request, response) {
     var productObj = getQueryObject(request);
     productObj.name = request.params.product_name;
     connector.getProducts(function(products) {
-        if (products  !== undefined && isNaN(products)) {
+        if (products !== undefined && isNaN(products)) {
             response.statusCode = 200;
             response.send(products);
         } else {
@@ -244,13 +244,8 @@ app.get('/products/:product_name', function(request, response) {
     }, productObj);
 });
 
-<<<<<<< HEAD
 app.listen(PORT);
-console.log('Server running at:: localhost:'+ PORT);
-=======
-app.listen(8080);
-console.log('Server running at:: localhost:3000');
->>>>>>> 2e15afaf36e6e12e8dfc1964b5f4145fa98a3cd7
+console.log('Server running at:: localhost:' + PORT);
 
 app.delete('/users/:email/homes/:home_name/products/:product_name', function(request, response) {
     var productObject = {
@@ -269,7 +264,7 @@ app.delete('/users/:email/homes/:home_name/products/:product_name', function(req
 });
 
 function getJSONResponse(data) {
-    if (data  !== undefined &&
+    if (data !== undefined &&
         data.toString().indexOf('[') === -1 && data.toString().indexOf(']') === -1) {
         data = "[" + data + "]";
     }
