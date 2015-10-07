@@ -5,12 +5,12 @@ var express = require('express'),
     loggerRotator = require('file-stream-rotator'),
     fileStream = require('fs'),
     bodyParser = require('body-parser'),
-    date = new Date();
+    date = new Date(),
+    PORT = 8080;
 
 var currentDate = date.getDate() + '-' + date.getMonth() + 1 + '-' + date.getFullYear(),
     logDIR = __dirname + '/logs',
     logFileName = logDIR + '/access_logs-' + currentDate + '.log';
-
 fileStream.existsSync(logDIR) || fileStream.mkdirSync(logDIR);
 var accessLogStream = loggerRotator.getStream({
     filename: logFileName,
@@ -20,12 +20,12 @@ var accessLogStream = loggerRotator.getStream({
 var app = express();
 app.use(new cors());
 /*app.use(bodyParser.urlencoded({
-	extended: true
+    extended: true
 }));*/
 app.use(bodyParser.json());
 app.use(logger('combined', {
     skip: function(request, response) {
-        return response.statusCode < 400
+        return response.statusCode < 400;
     },
     stream: accessLogStream
 }));
@@ -48,7 +48,7 @@ app.post('/users', function(request, response) {
 app.put('/users/:email', function(request, response) {
 
     var userObject = request.body;
-    if (userObject.email == undefined) {
+    if (userObject.email === undefined) {
         userObject.email = request.params.email;
     } else if (userObject.email != request.params.email) {
         sendBadRequestError(response);
@@ -81,7 +81,7 @@ app.get('/users/:email', function(request, response) {
     var userObj = getQueryObject(request);
     userObj.email = request.params.email;
     connector.getUsers(function(user) {
-        if (user == undefined || !isNaN(user)) {
+        if (user === undefined || !isNaN(user)) {
             sendNotFoundError(response);
         } else {
             response.statusCode = 200;
@@ -117,13 +117,13 @@ app.post('/users/:email/homes', function(request, response) {
         } else {
             sendInternalServerError(response);
         }
-    }, homeObject)
+    }, homeObject);
 });
 
 app.put('/users/:email/homes/:home_name', function(request, response) {
 
     var homeObject = request.body;
-    if (homeObject.owner_mail == undefined) {
+    if (homeObject.owner_mail === undefined) {
         homeObject.owner_mail = request.params.email;
     } else if (homeObject.owner_mail != request.params.email ||
         homeObject.name != request.params.home_name) {
@@ -141,7 +141,7 @@ app.put('/users/:email/homes/:home_name', function(request, response) {
 
 app.get('/homes', function(request, response) {
     connector.getHomes(function(homes) {
-        if (homes != undefined && isNaN(homes)) {
+        if (homes !== undefined && isNaN(homes)) {
             response.statusCode = 200;
             response.send(getJSONResponse(homes));
         } else {
@@ -155,7 +155,7 @@ app.get('/homes/:home_name', function(request, response) {
     var homeObj = getQueryObject(request);
     homeObj.name = request.params.home_name;
     connector.getHomes(function(homes) {
-        if (homes != undefined && isNaN(homes)) {
+        if (homes !== undefined && isNaN(homes)) {
             response.statusCode = 200;
             response.send(getJSONResponse(homes));
         } else {
@@ -200,13 +200,13 @@ app.put('/users/:email/homes/:home_name/products/:product_name', function(reques
         owner_mail = request.params.email,
         home_name = request.params.home_name,
         product_name = request.params.product_name;
-    if (productObject.owner_mail == undefined || productObject.owner_mail != owner_mail) {
+    if (productObject.owner_mail === undefined || productObject.owner_mail != owner_mail) {
         productObject.owner_mail = request.params.email;
     }
-    if (productObject.home_name == undefined || productObject.home_name != home_name) {
+    if (productObject.home_name === undefined || productObject.home_name != home_name) {
         productObject.home_name = home_name;
     }
-    if (productObject.name == undefined || productObject.name != product_name) {
+    if (productObject.name === undefined || productObject.name != product_name) {
         productObject.name = product_name;
     }
     connector.updateProduct(function(status) {
@@ -222,7 +222,7 @@ app.put('/users/:email/homes/:home_name/products/:product_name', function(reques
 app.get('/products', function(request, response) {
     var productObj = getQueryObject(request);
     connector.getProducts(function(products) {
-        if (products != undefined && isNaN(products)) {
+        if (products  !== undefined && isNaN(products)) {
             response.statusCode = 200;
             response.send(products);
         } else {
@@ -235,17 +235,17 @@ app.get('/products/:product_name', function(request, response) {
     var productObj = getQueryObject(request);
     productObj.name = request.params.product_name;
     connector.getProducts(function(products) {
-        if (products != undefined && isNaN(products)) {
+        if (products  !== undefined && isNaN(products)) {
             response.statusCode = 200;
             response.send(products);
         } else {
             sendNotFoundError(response);
         }
-    }, productObj)
+    }, productObj);
 });
 
-app.listen(3000);
-console.log('Server running at:: localhost:3000');
+app.listen(PORT);
+console.log('Server running at:: localhost:'+ PORT);
 
 app.delete('/users/:email/homes/:home_name/products/:product_name', function(request, response) {
     var productObject = {
@@ -261,10 +261,10 @@ app.delete('/users/:email/homes/:home_name/products/:product_name', function(req
             sendInternalServerError(response);
         }
     }, productObject);
-})
+});
 
 function getJSONResponse(data) {
-    if (data != undefined &&
+    if (data  !== undefined &&
         data.toString().indexOf('[') === -1 && data.toString().indexOf(']') === -1) {
         data = "[" + data + "]";
     }
@@ -291,8 +291,8 @@ function sendBadRequestError(response) {
 
 function getQueryObject(queryArgs) {
 
-    var queryObj = new Object();
-    for (queryParam in queryArgs.query) {
+    var queryObj = {};
+    for (var queryParam in queryArgs.query) {
         queryObj[queryParam] = queryArgs.query[queryParam];
     }
     return queryObj;
