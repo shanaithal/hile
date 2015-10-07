@@ -244,8 +244,13 @@ app.get('/products/:product_name', function(request, response) {
     }, productObj);
 });
 
+<<<<<<< HEAD
 app.listen(PORT);
 console.log('Server running at:: localhost:'+ PORT);
+=======
+app.listen(8080);
+console.log('Server running at:: localhost:3000');
+>>>>>>> 2e15afaf36e6e12e8dfc1964b5f4145fa98a3cd7
 
 app.delete('/users/:email/homes/:home_name/products/:product_name', function(request, response) {
     var productObject = {
