@@ -244,7 +244,7 @@ app.get('/products/:product_name', function(request, response) {
     }, productObj)
 });
 
-app.listen(3000);
+app.listen(8080);
 console.log('Server running at:: localhost:3000');
 
 app.delete('/users/:email/homes/:home_name/products/:product_name', function(request, response) {
