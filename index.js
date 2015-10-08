@@ -6,7 +6,7 @@ var express = require('express'),
     fileStream = require('fs'),
     bodyParser = require('body-parser'),
     date = new Date(),
-    PORT = 80;
+    PORT = process.env.PORT || 8080;
 
 var currentDate = date.getDate() + '-' + date.getMonth() + 1 + '-' + date.getFullYear(),
     logDIR = __dirname + '/logs',
