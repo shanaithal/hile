@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-app.use('/', require('./router'));
+app.use('/', require('./router/router'));
 
 app.listen(PORT);
 console.log('Server running at : ' + PORT);
