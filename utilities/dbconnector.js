@@ -46,9 +46,10 @@ DBConnector.prototype.updateUser = function(callback, userObject) {
     });
 };
 
-DBConnector.prototype.getUsers = function(callback, userObject) {
+DBConnector.prototype.getUsers = function(callback, userObject, paginationParams) {
 
-    User.find(userObject, fieldsNotInResponse).lean().exec(function(err, data) {
+    var paginationConfig = getPaginationConfig(paginationParams);
+    User.find(userObject, fieldsNotInResponse, paginationConfig).lean().exec(function(err, data) {
         if (err) {
             callback(err);
         } else {
@@ -143,23 +144,30 @@ DBConnector.prototype.createProduct = function(callback, productObject) {
         if (err) {
             callback(err);
         } else {
-            var product = new Product({
-                name: productObject.name,
-                description: productObject.description,
-                category: productObject.category,
-                sub_category: productObject.sub_category,
-                home_name: productObject.home_name,
-                owner_mail: productObject.owner_mail,
-                rent_rate: productObject.rent_rate,
-                buzzes: productObject.buzzes,
-                reviews: productObject.reviews
-            });
-            product.save(function(err, data) {
+            Category.findOne({
+                name: productObject.category
+            }, function(err, data) {
                 if (err) {
-                    console.log(err);
                     callback(err);
                 } else {
-                    callback(null, data);
+                    var product = new Product({
+                        name: productObject.name,
+                        description: productObject.description,
+                        category: productObject.category,
+                        sub_category: productObject.sub_category,
+                        home_name: productObject.home_name,
+                        owner_mail: productObject.owner_mail,
+                        rent_rate: productObject.rent_rate,
+                        buzzes: productObject.buzzes,
+                        reviews: productObject.reviews
+                    });
+                    product.save(function(err, data) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, data);
+                        }
+                    });
                 }
             });
         }
@@ -182,9 +190,10 @@ DBConnector.prototype.updateProduct = function(callback, productObject) {
     });
 };
 
-DBConnector.prototype.getProducts = function(callback, productObject) {
+DBConnector.prototype.getProducts = function(callback, paginationParams, productObject) {
 
-    Product.find(productObject, fieldsNotInResponse).lean().exec(function(err, data) {
+    var paginationConfig = getPaginationConfig(paginationParams);
+    Product.find(productObject, fieldsNotInResponse, paginationConfig).lean().exec(function(err, data) {
         if (err) {
             callback(err);
         } else {
@@ -212,7 +221,6 @@ module.exports = DBConnector;
 
 DBConnector.prototype.createCategory = function(callback, categoryObject) {
 
-    console.log(categoryObject);
     var category = new Category({
         name: categoryObject.name,
         description: categoryObject.description,
@@ -224,7 +232,6 @@ DBConnector.prototype.createCategory = function(callback, categoryObject) {
         if (err) {
             callback(err);
         } else {
-            console.log(data);
             callback(null, data);
         }
     });
@@ -240,3 +247,19 @@ DBConnector.prototype.getCategories = function(callback, categoryObject) {
         }
     });
 };
+
+
+function getPaginationConfig(paginationParams) {
+
+    var paginationConfig;
+    if (paginationParams !== undefined) {
+        if (paginationParams.page !== undefined && paginationParams.count !== undefined && !isNaN(paginationParams.page) && !isNaN(paginationParams.count)) {
+            var skip = paginationParams.page * paginationParams.count,
+                limit = paginationParams.count;
+            paginationConfig = {};
+            paginationConfig.skip = skip;
+            paginationConfig.limit = limit;
+        }
+    }
+    return paginationConfig;
+}

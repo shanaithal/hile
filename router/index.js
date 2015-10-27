@@ -1,6 +1,7 @@
 var router = require('express').Router(),
     DBConnector = require('../utilities/DBConnector');
 var connector = new DBConnector();
+var config = require('../config/config');
 
 router.get('/', function(request, response) {
     var welcomeMsg = {
@@ -43,6 +44,8 @@ router.put('/users/:email', function(request, response) {
 
 router.get('/users', function(request, response) {
 
+    var page = request.query.page - 1,
+        count = request.query.count;
     connector.getUsers(function(err, data) {
         if (err) {
             sendNotFoundError(response);
@@ -50,13 +53,17 @@ router.get('/users', function(request, response) {
             response.statusCode = 200;
             response.send(getJSONResponse(data));
         }
-    }, getQueryObject(request));
+    }, getQueryObject(request), {
+        page: page,
+        count: count
+    });
 });
 
 router.get('/users/:email', function(request, response) {
 
     var userObj = getQueryObject(request);
     userObj.email = request.params.email;
+    //    console.log(userObj);
     connector.getUsers(function(err, data) {
         if (err) {
             sendNotFoundError(response);
@@ -199,15 +206,22 @@ router.put('/users/:email/homes/:home_name/products/:product_name', function(req
 
 router.get('/products', function(request, response) {
 
+    var page = request.query.page - 1,
+        count = request.query.count;
     var productObj = getQueryObject(request);
     connector.getProducts(function(err, data) {
-        if (err) {
-            sendNotFoundError(response);
-        } else {
-            response.statusCode = 200;
-            response.send(getJSONResponse(data));
-        }
-    }, productObj);
+            if (err) {
+                sendNotFoundError(response);
+            } else {
+                response.statusCode = 200;
+                data = getLinkedProduct(JSON.parse(data));
+                response.send(getJSONResponse(data, page, count, request.url));
+            }
+        }, {
+            page: page,
+            count: count
+        },
+        productObj);
 });
 
 router.get('/products/:product_name', function(request, response) {
@@ -219,7 +233,8 @@ router.get('/products/:product_name', function(request, response) {
             sendNotFoundError(response);
         } else {
             response.statusCode = 200;
-            response.send(getJSONResponse(data));
+            data = getLinkedProduct(JSON.parse(data));
+            response.send(getJSONResponse(JSON.stringify(data)));
         }
     }, productObj);
 });
@@ -230,19 +245,19 @@ router.delete('/users/:email/homes/:home_name/products/:product_name', function(
         home_name: request.params.home_name,
         owner_mail: request.params.email
     };
-    connector.deleteProduct(function(status) {
-        if (status == 200) {
+    connector.deleteProduct(function(err) {
+        if (err) {
+            sendInternalServerError(response);
+        } else {
             response.statusCode = 200;
             response.send();
-        } else {
-            sendInternalServerError(response);
         }
     }, productObject);
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.post('/categories', function(request, response){
+router.post('/categories', function(request, response) {
 
     var categoryObject = request.body;
     console.log(categoryObject);
@@ -268,13 +283,28 @@ router.get('/categories', function(request, response) {
     }, getQueryObject(request));
 });
 
-function getJSONResponse(data) {
+function getJSONResponse(data, page, count, currentpageURL) {
+
+    var pages;
+
     if (data !== undefined &&
         data.toString().indexOf('[') === -1 && data.toString().indexOf(']') === -1) {
         data = "[" + data + "]";
     }
-    data = "{\"data\":" + data + "}";
-    var response = /*JSON.stringify(*/ data /*)*/ ;
+
+    if (page !== undefined) {
+        pages = getConsecutivePages(currentpageURL, parseInt(page), parseInt(count), data.length);
+        data = {
+            pages: pages,
+            items: data
+        };
+    } else {
+        data = {
+            items: JSON.parse(data)
+        };
+    }
+
+    var response = data;
     return response;
 }
 
@@ -298,9 +328,58 @@ function getQueryObject(queryArgs) {
 
     var queryObj = {};
     for (var queryParam in queryArgs.query) {
-        queryObj[queryParam] = queryArgs.query[queryParam];
+        if (queryParam !== "page" && queryParam !== "count") {
+            queryObj[queryParam] = queryArgs.query[queryParam];
+        }
     }
     return queryObj;
 }
 
+function getConsecutivePages(currentpageURL, currentPage, count, itemSetSize) {
+
+    var currentURLwithoutPageAndCount = currentpageURL.replace(/[p][a][g][e][=][0-9]+/, "").replace(/[c][o][u][n][t][=][0-9]+/, "").replace(/[&][&]/g, "&").replace(/[?][&]/, "?").replace(/[&]$/, "").replace(/[?]$/, "");
+    var pages = [];
+    var nextPage = {};
+    var previousPage = {};
+    var nextPageNumber = currentPage + 2;
+    var previousPageNumber = currentPage;
+    nextPage.rel = "next";
+    previousPage.rel = "previousPage";
+    if (itemSetSize === count) {
+        if (currentURLwithoutPageAndCount.indexOf("?") >= 0) {
+            nextPage.href = config.service_hostname + currentURLwithoutPageAndCount + "&page=" + nextPageNumber + "&count=" + count;
+        } else {
+            nextPage.href = config.service_hostname + currentURLwithoutPageAndCount + "?page=" + nextPageNumber + "&count=" + count;
+        }
+        pages.push(nextPage);
+    }
+    if (currentPage > 0) {
+        if (currentURLwithoutPageAndCount.indexOf("?") >= 0) {
+            previousPage.href = config.service_hostname + currentURLwithoutPageAndCount + "&page=" + previousPageNumber + "&count=" + count;
+        } else {
+            previousPage.href = config.service_hostname + currentURLwithoutPageAndCount + "?page=" + previousPageNumber + "&count=" + count;
+        }
+        pages.push(previousPage);
+    }
+    return pages;
+}
+
+function getLinkedProduct(products) {
+
+    for (var i = products.length - 1; i >= 0; i--) {
+        var links = [];
+        var homeLink = {};
+        homeLink.href = config.service_hostname + "/homes/" + products[i].home_name + "?owner_mail=" + products[i].owner_mail;
+        homeLink.rel = "home";
+        links.push(homeLink);
+
+        var ownerLink = {};
+        ownerLink.href = config.service_hostname + "/users/" + products[i].owner_mail;
+        ownerLink.rel = "Owner";
+        links.push(ownerLink);
+
+        products[i].links = links;
+    }
+    return products;
+}
 module.exports = router;
