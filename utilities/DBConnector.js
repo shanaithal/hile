@@ -8,8 +8,8 @@ var mongoose = require('mongoose'),
     fieldsNotInResponse = {
         '__v': 0
     };
-//mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
-mongoose.connect('mongodb://127.0.0.1/hile');
+mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
+//mongoose.connect('mongodb://127.0.0.1/hile');
 
 var DBConnector = function() {
     var dbConnectorObject = Object.create(DBConnector.prototype);
