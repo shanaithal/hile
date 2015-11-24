@@ -11,7 +11,11 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-app.use('/', require('./router'));
+app.use(express.static(__dirname + '/app'));
+app.get('/', function(request, response) {
+	response.render('./app/index.html');
+});
+app.use('/api', require('./router'));
 
 app.listen(PORT);
 console.log('Server running at : ' + PORT);

@@ -1,0 +1,83 @@
+<div>
+    <div class="container">
+        <div class="row z-depth-2">
+            <div class="col s12">
+                <h5>Search all you can </h5>
+                <div class="col s10 m10">
+                    <div class="input-field">
+                        <input id="search" type="text" class="validate">
+                        <label for="search">Thoughts goes in here :) </label>
+                    </div>
+                </div>
+                <div class="col s2 m2">
+                    <a class="btn-floating btn-large waves-effect waves-light red"><i class="material-icons">search</i></a>
+                </div>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="row">
+            <div>
+                <br>
+            </div>
+            <!-- Filter Code -->
+            <div class="col s12" >
+                <blockquote>
+                    <h5>Filter your Thoughts</h5>
+                </blockquote>
+            </div>
+            <div class="col s4 m4">
+                <select>
+                    <option value="" disabled selected>Choose your option</option>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                </select>
+            </div>
+            <div class="col s4 m4">
+                <select>
+                    <option value="" disabled selected>Choose your option</option>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                </select>
+            </div>
+            <div class="col s4 m4">
+                <select>
+                    <option value="" disabled selected>Choose your option</option>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                    <option value="3">Option 3</option>
+                </select>
+            </div>
+            <!-- Result Pagination -->
+            <div class="col s12 m8 offset-m4">
+                <ul class="pagination">
+                    <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+                    <li class="active"><a href="#!">1</a></li>
+                    <li class="waves-effect"><a href="#!">2</a></li>
+                    <li class="waves-effect"><a href="#!">3</a></li>
+                    <li class="waves-effect"><a href="#!">4</a></li>
+                    <li class="waves-effect"><a href="#!">5</a></li>
+                    <li class="waves-effect"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+                </ul>
+            </div>
+            <!-- Results List -->
+            <div class="col  s12 m4" ng-repeat="item in renting.Items">
+               <div class="card small hoverable">
+                    <div class="card-image ">
+                        <img src="./images/renting/team04.jpg">
+                        <span class="card-title">Home Name</span>
+                    </div>
+                    <div class="card-content">
+                        <li>Name of the Item</li>
+                        <li>Price of rent</li>
+                    </div>
+                    <div class="card-action">
+                        <a class="  btn"><i class="material-icons left"></i>Buzz</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

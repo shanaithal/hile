@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" />
+    <title>Home-In-a-Mile</title>
+    <!-- CSS  -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    <!--  Scripts-->
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="./libs/materialize.js"></script>
+    <!--  Plugins-->
+    <!--  Owl Plugin-->
+    <link rel="stylesheet" href="./plugins/owlcarousel/owl.carousel.css">
+    <link rel="stylesheet" href="./plugins/owlcarousel/owl.theme.css">
+    <script src="./plugins/owlcarousel/owl.carousel.js"></script>
+    <!-- Angular Dependencies -->
+    <script src="bundle.js"></script>
+    <script src="./src/common/init.js"></script>
+</head>
+
+<body ng-app="Hile">
+    <nav class="white" role="navigation">
+        <div class="nav-wrapper container">
+            <!--  <a id="logo-container" href="#" class="brand-logo">Home-In-A-Mile</a> -->
+            <span><img src="/images/banner/hile_high_res.png" style="max-width:120px"></span>
+            <hile-profile id="slide-out" class="side-nav"></hile-profile>
+            <a href="#" data-activates="slide-out" class="button-collapse show-on-large"><i class="mdi-navigation-menu"></i></a>
+        </div>
+    </nav>
+    <!-- All content changes from here on the basis of routing mechanisms -->
+    <div ui-view style="padding-top: 5px;"></div>
+    <!-- Footer -->
+    <div class="footer-copyright">
+        <div class="container">
+            Made by <a class="brown-text text-lighten-3" href="#">Somil Kumar</a>
+        </div>
+    </div>
+    <!-- /Footer -->
+</body>
+
+</html>

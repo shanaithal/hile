@@ -1,5 +1,5 @@
 var config = {
-    "service_hostname": "http://localhost:3000",
+    "service_hostname": "https://hile.herokuapp.com",
     "db_host": "mongodb://127.0.0.1",
     "db_collection": "hile"
         /*db_user: ,
