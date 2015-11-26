@@ -5,11 +5,17 @@ var mongoose = require('mongoose'),
     Buzz = require('../models/Buzz'),
     Review = require('../models/Review'),
     Category = require('../models/Category'),
+    Image = require('../models/Image'),
+    fs = require('fs'),
     fieldsNotInResponse = {
         '__v': 0
     };
-mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
-//mongoose.connect('mongodb://127.0.0.1/hile');
+
+if (mongoose.connection.readyState === 0) {
+    mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
+    // mongoose.connect('mongodb://127.0.0.1/hile');
+}
+
 
 var DBConnector = function() {
     var dbConnectorObject = Object.create(DBConnector.prototype);
@@ -197,6 +203,7 @@ DBConnector.prototype.getProducts = function(callback, paginationParams, product
         if (err) {
             callback(err);
         } else {
+            data = getImages(data, 3, "product");
             callback(null, JSON.stringify(data));
         }
     });
@@ -248,6 +255,59 @@ DBConnector.prototype.getCategories = function(callback, categoryObject) {
     });
 };
 
+DBConnector.prototype.uploadImage = function(callback, imagePath, entityObject) {
+
+    switch (entityObject.type.toLowerCase()) {
+        case "product":
+            Product.findOne({
+                _id: entityObject.id
+            }, function(err, data) {
+                if (err) {
+                    callback(err);
+                    console.log("Error Caught");
+                }
+            });
+            break;
+        case "home":
+            Home.findOne({
+                _id: entityObject.id
+            }, function(err, data) {
+                if (err) {
+                    callback(err);
+                    console.log("Error Caught");
+                }
+            });
+            break;
+    }
+
+    var image = new Image();
+    image.data = fs.readFileSync(imagePath);
+    image.content_type = imagePath.split(".")[1];
+    image.entity_type = entityObject.type;
+    image.entity_id = entityObject.id;
+    console.log(image.entity_id);
+    console.log(entityObject.id);
+
+    image.save(function(err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(null, data);
+        }
+    });
+};
+
+DBConnector.prototype.downloadImages = function(callback, entityObject) {
+    
+    Image.find(entityObject, function(err, data) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(null, data);
+        }
+    });
+};
+
 
 function getPaginationConfig(paginationParams) {
 
@@ -262,4 +322,38 @@ function getPaginationConfig(paginationParams) {
         }
     }
     return paginationConfig;
+}
+
+function getImages(data, limit, entity_type) {
+
+    if (!isArray(data)) {
+        data = [data];
+    }
+
+    var clone = JSON.parse(JSON.stringify(data));
+    clone.forEach(function(element, index) {
+        Image.find({
+                entity_id: element._id,
+                entity_type: entity_type
+            }, fieldsNotInResponse, {
+                skip: 0,
+                limit: limit
+            }, function(err, images) {
+                if (!err) {
+                    clone[index].images = [];
+                    images.forEach(function(image, imageIndex) {
+                            clone[index].images.push({
+                                data: image.data.toString()
+                            });
+                        });
+                    } else {
+                        console.log(err);
+                    }
+                    return clone;
+                });
+        });
+}
+
+function isArray(array) {
+    return array.constructor === Array;
 }

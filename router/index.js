@@ -1,7 +1,8 @@
-var router = require('express').Router(),
-    DBConnector = require('../utilities/DBConnector');
+var router = require('express').Router();
+var DBConnector = require('../utilities/DBConnector');
 var connector = new DBConnector();
 var config = require('../config/config');
+var multiparty = require('multiparty');
 
 router.get('/', function(request, response) {
     var welcomeMsg = {
@@ -281,6 +282,81 @@ router.get('/categories', function(request, response) {
             response.send(getJSONResponse(data));
         }
     }, getQueryObject(request));
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+router.post('/products/images', function(request, response) {
+
+    var form = new multiparty.Form();
+    var product_id = request.query.product_id;
+    var entityObject = {};
+    entityObject.type = "product";
+    entityObject.id = product_id;
+
+    form.on('file', function(name, file) {
+
+        if (file.originalFilename !== "") {
+            connector.uploadImage(function(err, data) {
+                if (err) {
+                    console.log(err);
+                    response.statusCode = 500;
+                    response.end();
+                } else {
+                    response.statusCode = 201;
+                    response.end();
+                }
+            }, file.path, entityObject);
+        }
+    });
+
+    form.parse(request);
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+router.post('/homes/images', function(request, response) {
+
+    var form = new multiparty.Form();
+    var home_id = request.query.home_id;
+    var entityObject = {};
+    entityObject.type = "home";
+    entityObject.id = home_id;
+
+    form.on('file', function(name, file) {
+
+        if (file.originalFilename !== "") {
+            connector.uploadImage(function(err, data) {
+                if (err) {
+                    console.log(err);
+                    response.statusCode = 500;
+                    response.end();
+                } else {
+                    response.statusCode = 201;
+                    response.end();
+                }
+            }, file.path, entityObject);
+        }
+    });
+
+    form.on('error', function(err) {
+        if (err) {
+            console.log(err);
+            respose.statusCode = 500;
+            response.end();
+        }
+    });
+
+    form.on('close', function() {
+        console.log("Request finished");
+    });
+
+    form.parse(request);
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+router.get('/products/images', function(request, response) {
 });
 
 function getJSONResponse(data, page, count, currentpageURL) {

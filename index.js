@@ -13,8 +13,9 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/app'));
 app.get('/', function(request, response) {
-	response.render('./app/index.html');
+    response.render('./app/index.html');
 });
+
 app.use('/api', require('./router'));
 
 app.listen(PORT);
