@@ -7,39 +7,100 @@
     <title>Home-In-a-Mile</title>
     <!-- CSS  -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection" />
-    <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    <link href="css/comingsoon.css" rel="stylesheet">
+    <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection" />
+    <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
     <!--  Scripts-->
     <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script src="./libs/materialize.js"></script>
+    <script src="./libs/angular.min.js"></script>
+    <script src="registration.js"></script>
     <!--  Plugins-->
-    <!--  Owl Plugin-->
-    <link rel="stylesheet" href="./plugins/owlcarousel/owl.carousel.css">
-    <link rel="stylesheet" href="./plugins/owlcarousel/owl.theme.css">
-    <script src="./plugins/owlcarousel/owl.carousel.js"></script>
-    <!-- Angular Dependencies -->
-    <script src="bundle.js"></script>
-    <script src="./src/common/init.js"></script>
 </head>
 
-<body ng-app="Hile">
-    <nav class="white" role="navigation">
-        <div class="nav-wrapper container">
-            <!--  <a id="logo-container" href="#" class="brand-logo">Home-In-A-Mile</a> -->
-            <span><img src="/images/banner/hile_high_res.png" style="max-width:120px"></span>
-            <hile-profile id="slide-out" class="side-nav"></hile-profile>
-            <a href="#" data-activates="slide-out" class="button-collapse show-on-large"><i class="mdi-navigation-menu"></i></a>
+<body ng-app="comingsoon">
+<!--<nav class="white" role="navigation">
+    <div class="nav-wrapper container">
+        &lt;!&ndash;  <a id="logo-container" href="#" class="brand-logo">Home-In-A-Mile</a> &ndash;&gt;
+        <span><img src="./images/banner/hile_high_res.png" style="max-width:120px"></span>
+    </div>
+</nav>-->
+<div class="row">
+
+<div class="main-content" ng-controller="comingSoon as vm">
+
+    <div class="row">
+        <div class="col s6 m4 sub-div">
+            <div class="content-center">
+                <img src="images/banner/hile_low_res.png" class="logo-bg">
+            </div>
+            <p class="desc-text">Hile an online peer to peer platform for household items and services.</p>
+
+        <p class="desc-text">Don't be suprised if your neighbours start doing business with you !</p>
+
+            <p class="desc-text">Curious ?</p>
+            <div class="content-center">
+            <a class="modal-trigger waves-effect waves-light btn" href="#" ng-click="vm.openDialog()" style="width: 250px">Drop your Email with us</a>
+                </div>
         </div>
-    </nav>
-    <!-- All content changes from here on the basis of routing mechanisms -->
-    <div ui-view style="padding-top: 5px;"></div>
-    <!-- Footer -->
-    <div class="footer-copyright">
-        <div class="container">
-            Made by <a class="brown-text text-lighten-3" href="#">Somil Kumar</a>
+        <div class="col s6 m8">
+            <div class="head-text">Coming Soon <br>Houses near you</div>
+            <div class="fill-img cap">
+                <img src="images/banner/illustration_1.png">
+            <p class="desc-text center">Launching Soon! Right now our awesome website<br> is stuck in Bengaluru Traffic</p>
+                </div>
+           <!-- <div>
+                <img src="images/banner/illustration_1.png" class="logo-bg">
+            </div>-->
         </div>
     </div>
-    <!-- /Footer -->
+
+
+    <div id="modal1" class="modal modal-fixed-footer">
+        <div class="modal-content">
+            <div class="row">
+                <form class="col s12" name="registerForm">
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <input  id="user-email" ng-model="vm.email" type="email" class="validate" required>
+                            <label for="user-email" data-error="Ahhh!, not a email ">Email ( we say no to spam!! )</label>
+                        </div>
+                        <div class="input-field col s12">
+                            <select id="user-city" ng-model="vm.city"
+                                    ng-options = "option.name for option in vm.cityOptions"
+                            </select>
+                            <label for="user-city">City you live in :</label>
+                        </div>
+                        <div class="input-field col s12">
+                            <input type="checkbox"   class="filled-in" id="filled-in-box" ng-model="vm.intrested"
+                                   ng-true-value="'YES'" ng-false-value="'NO'">
+                            <label for="filled-in-box">Yes I may want  to rent/sell/provide service on this platform.</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn waves-effect waves-light" ng-click="vm.recordResponse()" ng-disabled="registerForm.$invalid">Yeah I'm In !
+                <i class="material-icons right">send</i>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!-- Footer -->
+<div class="footer-copyright">
+    <div class="container">
+        <a class="brown-text text-lighten-3" href="#">Copy-right - Hile 2015</a>
+    </div>
+</div>
+
+<!-- /Footer -->
+    </div>
 </body>
 
 </html>

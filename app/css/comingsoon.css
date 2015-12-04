@@ -1,0 +1,66 @@
+.main-content{
+    background-color: #333333;
+    padding: 2.5em;
+}
+
+.main-heading {
+    font-family: 'Pacifico', cursive;
+
+}
+
+.sub-div{
+    margin-top: 5.5em;
+    border-right: .1em solid white;
+}
+
+.content-center{
+    text-align: center;
+}
+.content-center a{
+    background-color: rgba(68, 68, 68, 0.88) !important;
+}
+
+
+.logo-bg{
+    width: 180px;
+}
+
+.desc-text {
+    color: red;
+    font-weight: lighter;
+    text-align: center;
+}
+
+
+.head-text {
+   text-align : center;
+    color :white;
+    font-family: 'Pacifico', cursive;
+    font-size: 5em;
+}
+
+
+.fill-img {
+    position: relative;
+    width: 100%; /* for IE 6 */
+}
+
+.fill-img img{
+    width: 100%;
+}
+
+.cap p {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    font-weight: 500;
+}
+
+.confirmation {
+    border-radius: 10%;
+    background-color: white;
+    color: red;
+    font-weight: 400;
+    font-family: "Roboto", sans-serif;
+}
