@@ -1,6 +1,21 @@
-.main-content{
-    background-color: #333333;
-    padding: 2.5em;
+@font-face {
+    font-family: 'Futura';
+    src: url('../font/futura/ufonts.com_futura-condensed-medium.eot'); /* IE9 Compat Modes */
+url('../font/futura/ufonts.com_futura-condensed-medium.woff') format('woff'), /* Pretty Modern Browsers */
+url('../font/futura/ufonts.com_futura-condensed-medium.ttf')  format('truetype'), /* Safari, Android, iOS */
+}
+
+body{
+    overflow: hidden;
+}
+
+.main-content {
+background: url("../images/banner/bg_new.png") no-repeat center center fixed;
+-webkit-background-size: cover;
+-moz-background-size: cover;
+-o-background-size: cover;
+background-size: cover;
+height: 100vh;
 }
 
 .main-heading {
@@ -8,59 +23,66 @@
 
 }
 
-.sub-div{
+.sub-div {
     margin-top: 5.5em;
     border-right: .1em solid white;
 }
 
-.content-center{
-    text-align: center;
-}
-.content-center a{
-    background-color: rgba(68, 68, 68, 0.88) !important;
+.content-center {
+    text-align: left;
+    padding-left: 6em;
 }
 
+.content-center a {
+    width: 250px;
+    color: black !important;
+    background-color: white !important;
+}
 
-.logo-bg{
-    width: 180px;
+.logo-bg {
+    width: 140px;
 }
 
 .desc-text {
-    color: red;
-    font-weight: bold;
-    text-align: center;
+    color: white;
+    font-family: 'Roboto', condensed ;
+    text-align: left;
+    text-transform: uppercase;
+    padding-left: 6em;
 }
-
 
 .head-text {
-   text-align : center;
-    color :white;
-    font-family: 'Pacifico', cursive;
-    font-size: 5em;
+    padding-top: 2.0em;
+    padding-left: .3em;
+    text-align: left;
+    color: white;
+    font-family: 'Roboto', condensed , light ;
+    text-transform: uppercase;
+    font-size: xx-large;
+
+}
+
+@media only screen and (max-width: 600px) {
+
+
+    .small-hide {
+        visibility: hidden;
+    }
+
+    .content-center {
+
+        padding-left: 2.5em;
+    }
+
+    .desc-text {
+        padding-left: 2.5em;
+    }
+
+    .content-center a {
+        width: 100px;
+    }
+
+
 }
 
 
-.fill-img {
-    position: relative;
-    width: 100%; /* for IE 6 */
-}
-
-.fill-img img{
-    width: 100%;
-}
-
-.cap p {
-    position: absolute;
-    top: 20px;
-    left: 0;
-    width: 100%;
-    font-weight: 500;
-}
-
-.confirmation {
-    border-radius: 10%;
-    background-color: white;
-    color: red;
-    font-weight: 400;
-    font-family: "Roboto", sans-serif;
-}
