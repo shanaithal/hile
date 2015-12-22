@@ -1,22 +1,29 @@
 var mongoose = require('mongoose');
+var Location = require('./location');
 
-var householdSchema = new mongoose.Schema({
-    name: String,
-    location: {
-        address1: String,
-        address2: String,
-        town: String,
-        state: String,
-        pincode: Number
-    },
-    owner_mail: String
+var homeSchema = new mongoose.Schema({
+
+	name: {
+		type: String
+	},
+	location: {
+		type: mongoose.Schema.Types,
+		ref: 'Location'
+	},
+	owner_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'User'
+	},
+	owner_mail: {
+		type: String
+	}
 });
 
-householdSchema.index({
-    name: 1,
-    owner_mail: 1
+homeSchema.index({
+	name: 1,
+	owner_id: 1
 }, {
-    unique: true
+	unique: true
 });
 
-module.exports = mongoose.model('Home', householdSchema);
+module.exports = mongoose.model('Home', homeSchema);

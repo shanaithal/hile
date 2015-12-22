@@ -1,21 +1,52 @@
 var mongoose = require('mongoose');
 
-var productSchema = new mongoose.Schema({
-    name: String,
-    description: String,
-    category: String,
-    sub_category: String,
-    home_name: String,
-    owner_mail: String,
-    rent_rate: Number,
+var productSchema = mongoose.Schema({
+
+	name: {
+		type: String
+	},
+	description: {
+		type: String
+	},
+	category_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Category'
+	},
+	category_name: {
+		type: String
+	},
+	sub_category_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'SubCategory'
+	},
+	sub_category_name: {
+		type: String
+	},
+	home_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Home'
+	},
+	home_name: {
+		type: String
+	},
+	owner_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'User'
+	},
+	owner_mail: {
+		type: String
+	},
+	rent_rate: {
+		type: Number
+	}
 });
 
 productSchema.index({
-    name: 1,
-    home_name: 1,
-    owner_mail: 1
+	product_name: 1,
+	home_id: 1,
+	owner_id: 1
 }, {
-    unique: true
-});
+	unique: true
+})
 
 module.exports = mongoose.model('Product', productSchema);

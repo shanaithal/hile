@@ -1,359 +1,480 @@
-var mongoose = require('mongoose'),
-    User = require('../models/User'),
-    Home = require('../models/Home'),
-    Product = require('../models/Product'),
-    Buzz = require('../models/Buzz'),
-    Review = require('../models/Review'),
-    Category = require('../models/Category'),
-    Image = require('../models/Image'),
-    fs = require('fs'),
-    fieldsNotInResponse = {
-        '__v': 0
-    };
+var mongoose = require('mongoose');
+var User = require('../models/user');
+var Home = require('../models/home');
+var Category = require('../models/category');
+var SubCategory = require('../models/sub_category');
+var Product = require('../models/product');
+
+var config = require('../config');
+var fieldsOmittedFromResponse = {
+	'__v': 0,
+	'createdAt': 0
+};
 
 if (mongoose.connection.readyState === 0) {
-    mongoose.connect('mongodb://demo:demo@ds029454.mongolab.com:29454/heroku_n6nkk9m5');
-    // mongoose.connect('mongodb://127.0.0.1/hile');
+	mongoose.connect(config.dbHost + '/' + config.databaseName);
 }
 
-
-var DBConnector = function() {
-    var dbConnectorObject = Object.create(DBConnector.prototype);
-    return dbConnectorObject;
+var DBConnector = function () {
+	return Object.create(DBConnector.prototype);
 };
 
-DBConnector.prototype.createUser = function(callback, userObject) {
+var selfRefObject = new DBConnector();
 
-    var user = new User({
-        name: userObject.name,
-        email: userObject.email,
-        contact: userObject.contact,
-        rating: userObject.rating
-    });
-    user.save(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
+function _getLocation(resource_id, entity, operation, base_resource) {
+
+	return {
+		message: "The " + entity + " is " + operation + " successfully.",
+		href: config.service_url + "/" + base_resource + "/" + resource_id
+	};
+}
+
+DBConnector.prototype.createUser = function (callback, userObject) {
+	var user = new User({
+		name: userObject.name,
+		email: userObject.email.toLowerCase(),
+		contact: userObject.contact,
+		rating: userObject.rating
+	});
+	console.log("Hello");
+	user.save(function (err, data) {
+		if (err) {
+			callback(err);
+		} else {
+			callback(null, _getLocation(data._id, "user", "created", "users"));
+		}
+	});
 };
 
-DBConnector.prototype.updateUser = function(callback, userObject) {
+DBConnector.prototype.updateUser = function (callback, userObject, user_id, identifierType) {
 
-    User.findOneAndUpdate({
-        email: userObject.email
-    }, userObject, function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
+	userObject.email = userObject.email.toLowerCase();
+
+	delete userObject.email;
+
+	switch (identifierType) {
+		case "email":
+			User.findOneAndUpdate({
+					email: new RegExp('^' + user_id + '$', "i")
+				}, userObject, {
+					new: true
+				},
+				function (err, user) {
+					if (err) {
+						callback(err);
+					} else {
+						callback(null, _getLocation(user._id, "user", "updated", "users"));
+					}
+				});
+			break;
+		case "_id":
+			User.findOneAndUpdate({
+					_id: user_id
+				}, userObject, {
+					new: true
+				},
+				function (err, user) {
+					if (err) {
+						callback(err);
+					} else {
+						callback(null, _getLocation(user._id, "user", "updated", "users"));
+					}
+				});
+			break;
+	}
 };
 
-DBConnector.prototype.getUsers = function(callback, userObject, paginationParams) {
-
-    var paginationConfig = getPaginationConfig(paginationParams);
-    User.find(userObject, fieldsNotInResponse, paginationConfig).lean().exec(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, JSON.stringify(data));
-        }
-    });
+DBConnector.prototype.getUsers = function (callback, filters, fetchType) {
+	switch (fetchType) {
+		case "collection":
+			User.find(filters, fieldsOmittedFromResponse, function (err, users) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, users);
+				}
+			});
+			break;
+		case "email":
+			User.find({
+				email: new RegExp('^' + filters.email + '$', "i")
+			}, fieldsOmittedFromResponse, function (err, user) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, user);
+				}
+			});
+			break;
+		case "_id":
+			User.findById(filters._id, fieldsOmittedFromResponse, function (err, user) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, user);
+				}
+			});
+			break;
+	}
 };
 
-DBConnector.prototype.deleteUser = function(callback, email) {
+DBConnector.prototype.deleteUser = function (callback, user_id, identifierType) {
 
-    User.findOneAndRemove({
-        email: email
-    }, function(err) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null);
-        }
-    });
+	switch (identifierType) {
+		case "email":
+			User.findOneAndRemove({
+				email: user_id
+			}, function (err) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null);
+				}
+			});
+			break;
+		case "_id":
+			User.findOneAndRemove({
+				_id: user_id
+			}, function (err) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null);
+				}
+			});
+			break;
+	}
 };
 
-DBConnector.prototype.createHome = function(callback, homeObject) {
+DBConnector.prototype.createHome = function (callback, homeObject, identifierType) {
 
-    User.findOne({
-        email: homeObject.owner_mail
-    }, 'email', function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            var home = new Home({
-                name: homeObject.name,
-                location: homeObject.location,
-                owner_mail: homeObject.owner_mail
-            });
-            home.save(function(err, data) {
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(null, data);
-                }
-            });
-        }
-    });
+	switch (identifierType) {
+
+		case "email":
+			User.findOne({
+				email: homeObject.owner_mail
+			}, {
+				email: 1
+			}, function (err, owner) {
+				if (err) {
+					callback(err);
+				} else {
+					if (owner) {
+						var home = new Home({
+							name: homeObject.name,
+							owner_id: owner._id,
+							owner_mail: owner.email,
+							location: homeObject.location
+						});
+
+						home.save(function (err, home) {
+							if (err) {
+								callback(err);
+							} else {
+								callback(null, _getLocation(home._id, "home", "created", "homes"));
+							}
+						});
+					} else {
+						callback({});
+					}
+				}
+			});
+			break;
+		case "_id":
+			User.findOne({
+				_id: homeObject.owner_id
+			}, {
+				email: 1
+			}, function (err, owner) {
+				if (err) {
+					callback(err);
+				} else {
+					if (owner) {
+
+						var home = new Home({
+							name: homeObject.name,
+							owner_id: owner._id,
+							owner_mail: owner.email,
+							location: homeObject.location
+						});
+
+						home.save(function (err, home) {
+							if (err) {
+								callback(err);
+							} else {
+								callback(null, _getLocation(home._id, "home", "created", "homes"));
+							}
+						});
+					} else {
+						callback({});
+					}
+
+				}
+			});
+	}
 };
 
-DBConnector.prototype.updateHome = function(callback, homeObject) {
+DBConnector.prototype.updateHome = function (callback, homeObject, home_id, identifierType) {
 
-    Home.findOneAndUpdate({
-            name: homeObject.name,
-            owner_mail: homeObject.owner_mail
-        }, homeObject,
-        function(err, data) {
-            if (err) {
-                callback(err);
-            } else {
-                callback(null, data);
-            }
-        });
+	delete homeObject.owner_id;
+	delete homeObject.owner_mail;
+
+	switch (identifierType) {
+		case "_id":
+			Home.findOneAndUpdate({
+					"_id": home_id
+				}, homeObject, {
+					new: true
+				},
+				function (err, home) {
+					if (err) {
+						callback(err);
+					} else {
+						if (home !== null) {
+							callback(null, _getLocation(home._id, "home", "updated", "homes"));
+						} else {
+							callback({message: "Internal DB     Error"});
+						}
+					}
+				});
+			break;
+	}
 };
 
-DBConnector.prototype.getHomes = function(callback, homeObject) {
-
-    Home.find(homeObject, fieldsNotInResponse).lean().exec(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, JSON.stringify(data));
-        }
-    });
+DBConnector.prototype.getHomes = function (callback, filters, fetchType) {
+	switch (fetchType) {
+		case "collection":
+			Home.find(filters, fieldsOmittedFromResponse, function (err, homes) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, homes);
+				}
+			});
+			break;
+		case "_id":
+			Home.findById(filters._id, fieldsOmittedFromResponse, function (err, home) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, home);
+				}
+			});
+			break;
+	}
 };
 
-DBConnector.prototype.deleteHome = function(callback, homeObject) {
+DBConnector.prototype.deleteHome = function (callback, home_id) {
 
-    Home.findOneAndRemove({
-        name: homeObject.name,
-        owner_mail: homeObject.owner_mail
-    }, function(err) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null);
-        }
-    });
+	Home.findOneAndRemove({
+			_id: home_id
+		},
+		function (err) {
+			if (err) {
+				callback(err);
+			} else {
+				callback(null);
+			}
+		});
 };
 
-DBConnector.prototype.createProduct = function(callback, productObject) {
+DBConnector.prototype.createSubCategory = function (callback, sub_categoryObject) {
 
-    Home.findOne({
-        name: productObject.home_name,
-        owner_mail: productObject.owner_mail
-    }, function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            Category.findOne({
-                name: productObject.category
-            }, function(err, data) {
-                if (err) {
-                    callback(err);
-                } else {
-                    var product = new Product({
-                        name: productObject.name,
-                        description: productObject.description,
-                        category: productObject.category,
-                        sub_category: productObject.sub_category,
-                        home_name: productObject.home_name,
-                        owner_mail: productObject.owner_mail,
-                        rent_rate: productObject.rent_rate,
-                        buzzes: productObject.buzzes,
-                        reviews: productObject.reviews
-                    });
-                    product.save(function(err, data) {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            callback(null, data);
-                        }
-                    });
-                }
-            });
-        }
-    });
+	var sub_category = new SubCategory({
+		name: sub_categoryObject.name,
+		description: sub_categoryObject.description,
+		category_id: sub_categoryObject.category_id
+	});
+
+	sub_category.save(function (err, sub_category) {
+
+		if (err) {
+			callback(err);
+		} else {
+			callback(null, _getLocation(sub_category._id, "SubCategory", "created", "subcategories"));
+		}
+	});
 };
 
-DBConnector.prototype.updateProduct = function(callback, productObject) {
+DBConnector.prototype.getSubCategories = function (callback, filterObject, identifierType) {
 
-    var queryObject = {
-        name: productObject.name,
-        home_name: productObject.home_name,
-        owner_mail: productObject.owner_mail
-    };
-    Product.findOneAndUpdate(queryObject, productObject, function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
+	switch (identifierType) {
+		case "_id":
+			callback(null, {message: "UnderConstruction"});
+			break;
+		default :
+			SubCategory.find(filterObject, fieldsOmittedFromResponse, function (err, subCategories) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, subCategories);
+				}
+			});
+			break;
+	}
 };
 
-DBConnector.prototype.getProducts = function(callback, paginationParams, productObject) {
+DBConnector.prototype.deleteSubCategory = function (callback, sub_category_id) {
 
-    var paginationConfig = getPaginationConfig(paginationParams);
-    Product.find(productObject, fieldsNotInResponse, paginationConfig).lean().exec(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            data = getImages(data, 3, "product");
-            callback(null, JSON.stringify(data));
-        }
-    });
+	SubCategory.findOneAndRemove({_id: sub_category_id}, function (err) {
+
+		if (err) {
+			callback(err);
+		} else {
+			callback(null);
+		}
+	});
 };
 
-DBConnector.prototype.deleteProduct = function(callback, productObject) {
+DBConnector.prototype.createCategory = function (callback, categoryObject) {
 
-    Product.findOneAndRemove({
-        name: productObject.name,
-        home_name: productObject.home_name,
-        owner_mail: productObject.owner_mail
-    }, function(err) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null);
-        }
-    });
+	var category = new Category({
+		name: categoryObject.name,
+		description: categoryObject.description
+	});
+
+	category.save(function (err, category) {
+			if (err) {
+				callback(err);
+			} else {
+				var sub_categories = categoryObject.sub_categories;
+				if (sub_categories) {
+					for (var sub_category in sub_categories) {
+
+						sub_categories[sub_category].category_id = category._id;
+						selfRefObject.createSubCategory(function (err) {
+							if (err) {
+								occured_error = err;
+							}
+						}, sub_categories[sub_category]);
+					}
+				}
+				callback(null, _getLocation(category._id, "Category", "created", "categories"));
+			}
+		}
+	);
+
+}
+;
+
+DBConnector.prototype.getCategories = function (callback, filters, identifierType) {
+
+	if (identifierType === "_id") {
+		Category.findOne(filters, fieldsOmittedFromResponse, function (err, category) {
+			if (err) {
+				callback(err);
+			} else {
+				selfRefObject.getSubCategories(function (err, subCategories) {
+					if (err) {
+						callback(err);
+					} else {
+						if (subCategories.length > 0) {
+							var clone = JSON.parse(JSON.stringify(category));
+							clone.sub_categories = subCategories;
+							clone = [clone];
+							callback(null, clone);
+						} else {
+							callback(null, category);
+						}
+					}
+				}, filters);
+			}
+		});
+	} else {
+		Category.find(filters, fieldsOmittedFromResponse, function (err, categories) {
+			if (err) {
+				callback(err);
+			} else {
+				callback(null, categories);
+			}
+		});
+	}
+};
+
+DBConnector.prototype.deleteCategory = function (callback, category_id) {
+
+	Category.findOneAndRemove({
+			_id: category_id
+		},
+		function (err) {
+			if (err) {
+				callback(err);
+			} else {
+				callback(null);
+			}
+		});
+};
+
+DBConnector.prototype.createProduct = function (callback, productObject) {
+
+	Home.findOne({
+		_id: productObject.home_id
+	}, {name: 1}, function (err, home) {
+
+		if (err) {
+			callback(err);
+		} else {
+			if (home !== null) {
+
+				var product = new Product(productObject);
+
+				product.save(function (err, product) {
+
+					if (err) {
+						callback(err);
+					} else {
+						callback(null, _getLocation(product._id, "Product", "created", "products"));
+					}
+				});
+			} else {
+
+				callback({});
+			}
+		}
+	});
+};
+
+DBConnector.prototype.getProducts = function (callback, filters, fetchType) {
+
+	Product.find(filters, fieldsOmittedFromResponse, function (err, products) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null, products);
+		}
+	});
+};
+
+DBConnector.prototype.updateProduct = function (callback, productObject) {
+
+	Product.findOneAndUpdate({_id: productObject._id},
+		productObject, {
+			new: true
+		},
+		function (err, user) {
+			if (err) {
+				callback(err);
+			} else {
+				callback(null, _getLocation(user._id, "product", "updated", "products"));
+			}
+		});
+};
+
+DBConnector.prototype.deleteProduct = function (callback, product_id) {
+
+	Product.findOneAndRemove({_id: product_id}, function (err) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null);
+		}
+	});
 };
 
 module.exports = DBConnector;
-
-DBConnector.prototype.createCategory = function(callback, categoryObject) {
-
-    var category = new Category({
-        name: categoryObject.name,
-        description: categoryObject.description,
-        subcatrgories: categoryObject.subcatrgories
-    });
-
-    category.save(function(err, data) {
-
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
-};
-
-DBConnector.prototype.getCategories = function(callback, categoryObject) {
-
-    Category.find(categoryObject, fieldsNotInResponse).lean().exec(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, JSON.stringify(data));
-        }
-    });
-};
-
-DBConnector.prototype.uploadImage = function(callback, imagePath, entityObject) {
-
-    switch (entityObject.type.toLowerCase()) {
-        case "product":
-            Product.findOne({
-                _id: entityObject.id
-            }, function(err, data) {
-                if (err) {
-                    callback(err);
-                    console.log("Error Caught");
-                }
-            });
-            break;
-        case "home":
-            Home.findOne({
-                _id: entityObject.id
-            }, function(err, data) {
-                if (err) {
-                    callback(err);
-                    console.log("Error Caught");
-                }
-            });
-            break;
-    }
-
-    var image = new Image();
-    image.data = fs.readFileSync(imagePath);
-    image.content_type = imagePath.split(".")[1];
-    image.entity_type = entityObject.type;
-    image.entity_id = entityObject.id;
-    console.log(image.entity_id);
-    console.log(entityObject.id);
-
-    image.save(function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
-};
-
-DBConnector.prototype.downloadImages = function(callback, entityObject) {
-    
-    Image.find(entityObject, function(err, data) {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null, data);
-        }
-    });
-};
-
-
-function getPaginationConfig(paginationParams) {
-
-    var paginationConfig;
-    if (paginationParams !== undefined) {
-        if (paginationParams.page !== undefined && paginationParams.count !== undefined && !isNaN(paginationParams.page) && !isNaN(paginationParams.count)) {
-            var skip = paginationParams.page * paginationParams.count,
-                limit = paginationParams.count;
-            paginationConfig = {};
-            paginationConfig.skip = skip;
-            paginationConfig.limit = limit;
-        }
-    }
-    return paginationConfig;
-}
-
-function getImages(data, limit, entity_type) {
-
-    if (!isArray(data)) {
-        data = [data];
-    }
-
-    var clone = JSON.parse(JSON.stringify(data));
-    clone.forEach(function(element, index) {
-        Image.find({
-                entity_id: element._id,
-                entity_type: entity_type
-            }, fieldsNotInResponse, {
-                skip: 0,
-                limit: limit
-            }, function(err, images) {
-                if (!err) {
-                    clone[index].images = [];
-                    images.forEach(function(image, imageIndex) {
-                            clone[index].images.push({
-                                data: image.data.toString()
-                            });
-                        });
-                    } else {
-                        console.log(err);
-                    }
-                    return clone;
-                });
-        });
-}
-
-function isArray(array) {
-    return array.constructor === Array;
-}
