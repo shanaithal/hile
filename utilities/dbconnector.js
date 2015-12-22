@@ -4,6 +4,7 @@ var Home = require('../models/home');
 var Category = require('../models/category');
 var SubCategory = require('../models/sub_category');
 var Product = require('../models/product');
+var Buzz = require('../models/buzz');
 
 var config = require('../config');
 var fieldsOmittedFromResponse = {
@@ -36,7 +37,6 @@ DBConnector.prototype.createUser = function (callback, userObject) {
 		contact: userObject.contact,
 		rating: userObject.rating
 	});
-	console.log("Hello");
 	user.save(function (err, data) {
 		if (err) {
 			callback(err);
@@ -84,10 +84,16 @@ DBConnector.prototype.updateUser = function (callback, userObject, user_id, iden
 	}
 };
 
-DBConnector.prototype.getUsers = function (callback, filters, fetchType) {
+DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginationConfig) {
+
 	switch (fetchType) {
 		case "collection":
-			User.find(filters, fieldsOmittedFromResponse, function (err, users) {
+
+			if (paginationConfig == {}) {
+				paginationConfig.skip = config.defaultPage;
+				paginationConfig.limit = config.defaultCount;
+			}
+			User.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, users) {
 				if (err) {
 					callback(err);
 				} else {
@@ -476,5 +482,41 @@ DBConnector.prototype.deleteProduct = function (callback, product_id) {
 		}
 	});
 };
+
+DBConnector.prototype.getCollectionCount = function (callback, collectionType) {
+
+	switch (collectionType.toLowerCase()) {
+
+		case "user":
+			_getCollectionCount(callback, User);
+			break;
+		case "home":
+			_getCollectionCount(callback, Home);
+			break;
+		case "product":
+			_getCollectionCount(callback, Product);
+			break;
+		case "buzz":
+			_getCollectionCount(callback, Buzz);
+			break;
+	}
+};
+
+DBConnector.prototype.getHomeCount = function (callback) {
+
+	_getCollectionCount(callback, Home);
+};
+
+function _getCollectionCount(callback, collectionType) {
+
+	collectionType.find({}).count(function (err, count) {
+
+		if (err) {
+			callback(err);
+		} else {
+			callback(null, count);
+		}
+	});
+}
 
 module.exports = DBConnector;
