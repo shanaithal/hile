@@ -33,20 +33,38 @@ router.route('/users')
 		}
 	})
 	.get(function (request, response) {
+		var page = parseInt(request.query.page);
+		var elementCount = parseInt(request.query.count);
 		var filters = Utility._getFilters(request.query);
+		var paginationConfig = {};
+		paginationConfig.skip = page;
+		paginationConfig.limit = elementCount;
 		connector.getUsers(function (err, users) {
 			if (err) {
 				errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "Could not fetch users.");
 			} else {
 				if (users.length > 0) {
-					response.status(200);
-					response.setHeader('content-type', 'application/json');
-					response.send(Utility.getFormattedResponse(users));
+					connector.getCollectionCount(function (err, collectionSize) {
+
+						users = Utility.getFormattedResponse(users);
+						users.data.collection_size = collectionSize;
+						if (collectionSize > elementCount) {
+							users.data.pages = [];
+							var lastPage = collectionSize / elementCount;
+							if (page < lastPage) {
+								users.data.pages.push(Utility.getNextPage(request.url, page + 1, elementCount));
+							}
+							if (page > 1) {
+								users.data.pages.push(Utility.getPreviousPage(request.url, page - 1, elementCount));
+							}
+						}
+						response.status(200).json(users);
+					}, "user");
 				} else {
 					errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no users in the System");
 				}
 			}
-		}, filters[0], "collection");
+		}, filters, "collection", paginationConfig);
 	});
 
 router.route('/users/:user_id')
@@ -61,9 +79,7 @@ router.route('/users/:user_id')
 				if (err) {
 					errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "Could not update the User");
 				} else {
-					response.statusCode = 200;
-					response.setHeader('content-type', 'application/json');
-					response.send(location);
+					response.status(200).json(location);
 				}
 			}, userObject, user_id, "email");
 		} else {

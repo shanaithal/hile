@@ -88,10 +88,21 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 
 	switch (fetchType) {
 		case "collection":
-
-			if (paginationConfig == {}) {
-				paginationConfig.skip = config.defaultPage;
-				paginationConfig.limit = config.defaultCount;
+			if (paginationConfig.limit > config.maxCount) {
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig === {}) {
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig.skip < 1) {
+				console.log("You Idiot");
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig.skip > 0) {
+				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 			}
 			User.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, users) {
 				if (err) {
@@ -247,10 +258,26 @@ DBConnector.prototype.updateHome = function (callback, homeObject, home_id, iden
 	}
 };
 
-DBConnector.prototype.getHomes = function (callback, filters, fetchType) {
+DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationConfig) {
 	switch (fetchType) {
 		case "collection":
-			Home.find(filters, fieldsOmittedFromResponse, function (err, homes) {
+			if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig === {}) {
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig.skip < 1) {
+				console.log("You Idiot");
+				paginationConfig.skip = config.defaultSkip;
+				paginationConfig.limit = config.defaultLimit;
+			}
+			if (paginationConfig.skip > 0) {
+				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
+			}
+			Home.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, homes) {
 				if (err) {
 					callback(err);
 				} else {
@@ -440,9 +467,26 @@ DBConnector.prototype.createProduct = function (callback, productObject) {
 	});
 };
 
-DBConnector.prototype.getProducts = function (callback, filters, fetchType) {
+DBConnector.prototype.getProducts = function (callback, filters, fetchType, paginationConfig) {
 
-	Product.find(filters, fieldsOmittedFromResponse, function (err, products) {
+	if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
+		paginationConfig.skip = config.defaultSkip;
+		paginationConfig.limit = config.defaultLimit;
+	}
+	if (paginationConfig === {}) {
+		paginationConfig.skip = config.defaultSkip;
+		paginationConfig.limit = config.defaultLimit;
+	}
+	if (paginationConfig.skip < 1) {
+		console.log("You Idiot");
+		paginationConfig.skip = config.defaultSkip;
+		paginationConfig.limit = config.defaultLimit;
+	}
+	if (paginationConfig.skip > 0) {
+		paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
+	}
+
+	Product.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, products) {
 
 		if (err) {
 
@@ -500,11 +544,6 @@ DBConnector.prototype.getCollectionCount = function (callback, collectionType) {
 			_getCollectionCount(callback, Buzz);
 			break;
 	}
-};
-
-DBConnector.prototype.getHomeCount = function (callback) {
-
-	_getCollectionCount(callback, Home);
 };
 
 function _getCollectionCount(callback, collectionType) {

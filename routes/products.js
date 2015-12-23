@@ -24,6 +24,7 @@ router.route('/products')
 
 						var subCategory = subCategories[0];
 						productObject.sub_category_id = subCategory._id;
+						var skipPagination = {};
 						connector.getHomes(function (err, homes) {
 
 							if (err) {
@@ -45,23 +46,48 @@ router.route('/products')
 									}
 								}, productObject);
 							}
-						}, {name: productObject.home_name, owner_mail: productObject.owner_mail}, "collection");
+						}, {name: productObject.home_name, owner_mail: productObject.owner_mail}, "collection", skipPagination);
 					}
 				});
 			}
 		}, {name: productObject.category_name}, "_id");
 	}).get(function (request, response) {
 
+	var page = parseInt(request.query.page);
+	var elementCount = parseInt(request.query.count);
 	var filters = Utility._getFilters(request.query);
+	var paginationConfig = {};
+	paginationConfig.skip = page;
+	paginationConfig.limit = elementCount;
+
 	connector.getProducts(function (err, products) {
 		if (err) {
 
 			errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested resource not found.");
 		} else {
 
-			response.status(200).json(Utility.getFormattedResponse(products));
+			if (products.length > 0) {
+				connector.getCollectionCount(function (err, collectionSize) {
+
+					products = Utility.getFormattedResponse(products);
+					products.data.collection_size = collectionSize;
+					if (collectionSize > elementCount) {
+						products.data.pages = [];
+						var lastPage = collectionSize / elementCount;
+						if (page < lastPage) {
+							products.data.pages.push(Utility.getNextPage(request.url, page + 1, elementCount));
+						}
+						if (page > 1) {
+							products.data.pages.push(Utility.getPreviousPage(request.url, page - 1, elementCount));
+						}
+					}
+					response.status(200).json(products);
+				}, "product");
+			} else {
+				errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no homes in the System.");
+			}
 		}
-	}, filters, "collection");
+	}, filters, "collection", paginationConfig);
 });
 
 router.route('/products/:product_id')

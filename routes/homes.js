@@ -49,20 +49,39 @@ router.route('/homes')
 	})
 	.get(function (request, response) {
 
+		var page = parseInt(request.query.page);
+		var elementCount = parseInt(request.query.count);
 		var filters = Utility._getFilters(request.query);
+		var paginationConfig = {};
+		paginationConfig.skip = page;
+		paginationConfig.limit = elementCount;
+
 		connector.getHomes(function (err, homes) {
 			if (err) {
 				errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "Could not fetch homes.");
 			} else {
 				if (homes.length > 0) {
-					response.statusCode = 200;
-					response.setHeader('content-type', 'application/json');
-					response.send(Utility.getFormattedResponse(homes));
+					connector.getCollectionCount(function (err, collectionSize) {
+
+						homes = Utility.getFormattedResponse(homes);
+						homes.data.collection_size = collectionSize;
+						if (collectionSize > elementCount) {
+							homes.data.pages = [];
+							var lastPage = collectionSize / elementCount;
+							if (page < lastPage) {
+								homes.data.pages.push(Utility.getNextPage(request.url, page + 1, elementCount));
+							}
+							if (page > 1) {
+								homes.data.pages.push(Utility.getPreviousPage(request.url, page - 1, elementCount));
+							}
+						}
+						response.status(200).json(homes);
+					}, "home");
 				} else {
 					errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no homes in the System.");
 				}
 			}
-		}, filters, "collection");
+		}, filters, "collection", paginationConfig);
 	});
 
 router.route('/homes/:home_id')
