@@ -42,11 +42,11 @@ var productSchema = mongoose.Schema({
 });
 
 productSchema.index({
-	product_name: 1,
+	name: 1,
 	home_id: 1,
 	owner_id: 1
 }, {
 	unique: true
-})
+});
 
 module.exports = mongoose.model('Product', productSchema);

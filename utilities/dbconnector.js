@@ -105,13 +105,15 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 			}
 			var query = User.find(filters, fieldsOmittedFromResponse, paginationConfig);
-			var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-			var sort_params = sort_config.sort_params;
+			if (sort_config !== {} && sort_config !== undefined) {
+				var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+				var sort_params = sort_config.sort_params;
 
-			for (var index in sort_params) {
-				var sort_object = {};
-				sort_object[sort_params[index]] = sort_order;
-				query = query.sort(sort_object);
+				for (var index in sort_params) {
+					var sort_object = {};
+					sort_object[sort_params[index]] = sort_order;
+					query = query.sort(sort_object);
+				}
 			}
 			query.exec(function (err, users) {
 				if (err) {
@@ -287,13 +289,15 @@ DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginat
 				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 			}
 			var query = Home.find(filters, fieldsOmittedFromResponse, paginationConfig);
-			var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-			var sort_params = sort_config.sort_params;
+			if (sort_config !== {} && sort_config !== undefined) {
+				var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+				var sort_params = sort_config.sort_params;
 
-			for (var index in sort_params) {
-				var sort_object = {};
-				sort_object[sort_params[index]] = sort_order;
-				query = query.sort(sort_object);
+				for (var index in sort_params) {
+					var sort_object = {};
+					sort_object[sort_params[index]] = sort_order;
+					query = query.sort(sort_object);
+				}
 			}
 			query.exec(function (err, homes) {
 				if (err) {
@@ -505,13 +509,15 @@ DBConnector.prototype.getProducts = function (callback, filters, fetchType, pagi
 	}
 
 	var query = Product.find(filters, fieldsOmittedFromResponse, paginationConfig);
-	var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-	var sort_params = sort_config.sort_params;
+	if (sort_config !== {} && sort_config !== undefined) {
+		var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+		var sort_params = sort_config.sort_params;
 
-	for (var index in sort_params) {
-		var sort_object = {};
-		sort_object[sort_params[index]] = sort_order;
-		query = query.sort(sort_object);
+		for (var index in sort_params) {
+			var sort_object = {};
+			sort_object[sort_params[index]] = sort_order;
+			query = query.sort(sort_object);
+		}
 	}
 	query.exec(function (err, products) {
 
