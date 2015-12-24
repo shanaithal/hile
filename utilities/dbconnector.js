@@ -84,7 +84,7 @@ DBConnector.prototype.updateUser = function (callback, userObject, user_id, iden
 	}
 };
 
-DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginationConfig) {
+DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginationConfig, sort_config) {
 
 	switch (fetchType) {
 		case "collection":
@@ -104,7 +104,16 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 			if (paginationConfig.skip > 0) {
 				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 			}
-			User.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, users) {
+			var query = User.find(filters, fieldsOmittedFromResponse, paginationConfig);
+			var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+			var sort_params = sort_config.sort_params;
+
+			for (var index in sort_params) {
+				var sort_object = {};
+				sort_object[sort_params[index]] = sort_order;
+				query = query.sort(sort_object);
+			}
+			query.exec(function (err, users) {
 				if (err) {
 					callback(err);
 				} else {
@@ -258,7 +267,7 @@ DBConnector.prototype.updateHome = function (callback, homeObject, home_id, iden
 	}
 };
 
-DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationConfig) {
+DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationConfig, sort_config) {
 	switch (fetchType) {
 		case "collection":
 			if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
@@ -277,7 +286,16 @@ DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginat
 			if (paginationConfig.skip > 0) {
 				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 			}
-			Home.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, homes) {
+			var query = Home.find(filters, fieldsOmittedFromResponse, paginationConfig);
+			var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+			var sort_params = sort_config.sort_params;
+
+			for (var index in sort_params) {
+				var sort_object = {};
+				sort_object[sort_params[index]] = sort_order;
+				query = query.sort(sort_object);
+			}
+			query.exec(function (err, homes) {
 				if (err) {
 					callback(err);
 				} else {
@@ -467,7 +485,7 @@ DBConnector.prototype.createProduct = function (callback, productObject) {
 	});
 };
 
-DBConnector.prototype.getProducts = function (callback, filters, fetchType, paginationConfig) {
+DBConnector.prototype.getProducts = function (callback, filters, fetchType, paginationConfig, sort_config) {
 
 	if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
 		paginationConfig.skip = config.defaultSkip;
@@ -486,7 +504,16 @@ DBConnector.prototype.getProducts = function (callback, filters, fetchType, pagi
 		paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
 	}
 
-	Product.find(filters, fieldsOmittedFromResponse, paginationConfig).exec(function (err, products) {
+	var query = Product.find(filters, fieldsOmittedFromResponse, paginationConfig);
+	var sort_order = sort_config.order === 'ascending' ? 1 : -1;
+	var sort_params = sort_config.sort_params;
+
+	for (var index in sort_params) {
+		var sort_object = {};
+		sort_object[sort_params[index]] = sort_order;
+		query = query.sort(sort_object);
+	}
+	query.exec(function (err, products) {
 
 		if (err) {
 

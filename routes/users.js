@@ -35,6 +35,12 @@ router.route('/users')
 	.get(function (request, response) {
 		var page = parseInt(request.query.page);
 		var elementCount = parseInt(request.query.count);
+		var sort_params = request.query.sortby;
+		var sort_order = request.query.order;
+		if (!Utility.isArray(sort_params)) {
+			sort_params = [sort_params];
+		}
+		var sort_config = {sort_params: sort_params, order: sort_order};
 		var filters = Utility._getFilters(request.query);
 		var paginationConfig = {};
 		paginationConfig.skip = page;
@@ -64,7 +70,7 @@ router.route('/users')
 					errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no users in the System");
 				}
 			}
-		}, filters, "collection", paginationConfig);
+		}, filters, "collection", paginationConfig, sort_config);
 	});
 
 router.route('/users/:user_id')

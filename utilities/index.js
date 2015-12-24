@@ -8,6 +8,10 @@ var Utility = function () {
 
 Utility.prototype.isArray = function (array) {
 
+	if (array === null || array === undefined) {
+
+		return false;
+	}
 	if (array.constructor !== Array) {
 		return false;
 	}
@@ -31,6 +35,8 @@ Utility.prototype._getFilters = function (queryParams) {
 	var filters = queryParams;
 	delete filters.page;
 	delete filters.count;
+	delete filters.sortby;
+	delete filters.order;
 	//var clone = JSON.parse(JSON.stringify(queryParams));
 	return filters;
 }
@@ -45,7 +51,7 @@ Utility.prototype.getNextPage = function (path, page, count) {
 	} else {
 		path = path + "&page=" + page + "&count=" + count;
 	}
-	
+
 	return _getLinkObject(path, "next");
 };
 
