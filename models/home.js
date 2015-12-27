@@ -21,9 +21,15 @@ var homeSchema = new mongoose.Schema({
 
 homeSchema.index({
 	name: 1,
-	owner_id: 1
+	owner_mail: 1
 }, {
 	unique: true
+});
+
+homeSchema.index({
+	name: "text",
+	owner_mail: "text",
+	location: "text"
 });
 
 module.exports = mongoose.model('Home', homeSchema);

@@ -18,17 +18,16 @@ router.route('/products')
 				productObject.category_id = category._id;
 				connector.getSubCategories(function (err, subCategories) {
 					if (err) {
-
 						errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
 					} else {
 
 						var subCategory = subCategories[0];
 						productObject.sub_category_id = subCategory._id;
 						var skipPagination = {};
+						var skipSorting = {};
 						connector.getHomes(function (err, homes) {
 
 							if (err) {
-
 								errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
 							} else {
 
@@ -49,7 +48,7 @@ router.route('/products')
 						}, {
 							name: productObject.home_name,
 							owner_mail: productObject.owner_mail
-						}, "collection", skipPagination);
+						}, "collection", skipPagination, skipSorting);
 					}
 				});
 			}
@@ -112,7 +111,7 @@ router.route('/products/:product_id')
 
 				response.status(200).json(Utility.getFormattedResponse(product));
 			}
-		}, {_id: product_id}, "collections");
+		}, {_id: product_id}, "_id", {}, {});
 	}).put(function (request, response) {
 
 	var productObject = request.body;
@@ -120,7 +119,6 @@ router.route('/products/:product_id')
 
 		if (err) {
 
-			console.log ("Gotcha.." + JSON.stringify(err));
 			errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be updated");
 		} else {
 

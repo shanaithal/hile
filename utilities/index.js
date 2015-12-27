@@ -33,10 +33,18 @@ Utility.prototype.getFormattedResponse = function (resultSet) {
 Utility.prototype._getFilters = function (queryParams) {
 
 	var filters = queryParams;
-	delete filters.page;
-	delete filters.count;
-	delete filters.sortby;
-	delete filters.order;
+	if (filters.page != undefined) {
+		delete filters.page;
+	}
+	if (filters.count != undefined) {
+		delete filters.count;
+	}
+	if (filters.sortby != undefined) {
+		delete filters.sortby;
+	}
+	if (filters.order != undefined) {
+		delete filters.order;
+	}
 	//var clone = JSON.parse(JSON.stringify(queryParams));
 	return filters;
 }

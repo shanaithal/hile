@@ -42,11 +42,20 @@ var productSchema = mongoose.Schema({
 });
 
 productSchema.index({
-	name: 1,
-	home_id: 1,
-	owner_id: 1
-}, {
-	unique: true
+		name: 1,
+		owner_mail: 1,
+		home_name: 1
+	},
+	{
+		unique: true
+	});
+productSchema.index({
+	name: "text",
+	description: "text",
+	category_name: "text",
+	sub_category_name: "text",
+	home_name: "text",
+	owner_mail: "text"
 });
 
 module.exports = mongoose.model('Product', productSchema);

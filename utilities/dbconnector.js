@@ -560,6 +560,32 @@ DBConnector.prototype.deleteProduct = function (callback, product_id) {
 	});
 };
 
+DBConnector.prototype.getSearchTerm = function (callback, search_terms, category) {
+
+	var query;
+
+	switch (category) {
+
+		case "home":
+			break;
+		case "user":
+			break;
+		default:
+			query = Product.find({$text: {$search: search_terms.q}});
+	}
+
+	query.exec(function (err, collections) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null, collections);
+		}
+	});
+}
+
 DBConnector.prototype.getCollectionCount = function (callback, collectionType) {
 
 	switch (collectionType.toLowerCase()) {

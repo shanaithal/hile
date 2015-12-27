@@ -23,6 +23,7 @@ app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/homes'));
 app.use('/api', require('./routes/categories'));
 app.use('/api', require('./routes/products'));
+app.use('/api', require('./routes/search'));
 
 app.listen(PORT);
 

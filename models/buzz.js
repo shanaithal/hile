@@ -24,10 +24,19 @@ var buzzSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Product'
 	},
+	product_owner_id: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'User'
+	},
 	buzzedAt: {
 		type: Date,
 		default: Date.now()
 	}
+});
+
+buzzSchema.index({
+	buzzer_name: "text"
+
 });
 
 module.exports = mongoose.model('Buzz', buzzSchema);
