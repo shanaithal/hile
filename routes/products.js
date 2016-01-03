@@ -12,43 +12,48 @@ router.route('/products')
 
 			if (err) {
 
-				errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
+				errorResponse.sendErrorResponse(response, 400, "Bad Request", "Please check if the category exists");
 			} else {
 
 				productObject.category_id = category._id;
 				connector.getSubCategories(function (err, subCategories) {
 					if (err) {
-						errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
+						errorResponse.sendErrorResponse(response, 400, "Bad Request", "Please check if the sub category exists");
 					} else {
 
 						var subCategory = subCategories[0];
-						productObject.sub_category_id = subCategory._id;
-						var skipPagination = {};
-						var skipSorting = {};
-						connector.getHomes(function (err, homes) {
+						if (subCategory === undefined || subCategory === {}) {
 
-							if (err) {
-								errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
-							} else {
+							errorResponse.sendErrorResponse(response, 400, "Bad Request", "Please check if the sub category exists");
+						} else {
+							productObject.sub_category_id = subCategory._id;
+							var skipPagination = {};
+							var skipSorting = {};
+							connector.getHomes(function (err, homes) {
 
-								var home = homes[0];
-								productObject.home_id = home._id;
-								productObject.owner_id = home.owner_id;
+								if (err) {
+									errorResponse.sendErrorResponse(response, 400, "Bad Request", "Please check if the home exists");
+								} else {
 
-								connector.createProduct(function (err, location) {
+									var home = homes[0];
+									productObject.home_id = home._id;
+									productObject.owner_id = home.owner_id;
 
-									if (err) {
-										errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
-									} else {
+									connector.createProduct(function (err, location) {
 
-										response.status(201).json(location);
-									}
-								}, productObject);
-							}
-						}, {
-							name: productObject.home_name,
-							owner_mail: productObject.owner_mail
-						}, "collection", skipPagination, skipSorting);
+										if (err) {
+											errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "The requested resource could not be created");
+										} else {
+
+											response.status(201).json(location);
+										}
+									}, productObject);
+								}
+							}, {
+								name: productObject.home_name,
+								owner_mail: productObject.owner_mail
+							}, "collection", skipPagination, skipSorting);
+						}
 					}
 				});
 			}

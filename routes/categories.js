@@ -97,6 +97,21 @@ router.route('/subcategories')
 				}
 			}
 		});
-	})
+	});
+
+router.route('/subcategories/:subcategory_id')
+	.get(function (request, response) {
+
+		var subcategory_id = request.params.subcategory_id;
+		connector.getSubCategories(function (err, subCategory) {
+
+			if (err) {
+				errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested subcategory could not be found");
+			} else {
+
+				response.status(200).json(Utility.getFormattedResponse(subCategory));
+			}
+		}, {_id: subcategory_id}, "_id");
+	});
 
 module.exports = router;

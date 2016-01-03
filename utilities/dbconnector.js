@@ -8,6 +8,8 @@ var Buzz = require('../db/models/buzz');
 var QueryBuilder = new require('./query_builder')();
 var Image = require('../db/models/image');
 var fs = require('fs');
+var Utility = new require('./')();
+var Review = require('../db/models/review');
 
 var config = require('../config');
 var fieldsOmittedFromResponse = {
@@ -94,8 +96,10 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 			var query = QueryBuilder.build(User, filters, fieldsOmittedFromResponse, sort_config, pagination_config)
 			query.exec(function (err, users) {
 				if (err) {
+
 					callback(err);
 				} else {
+
 					callback(null, users);
 				}
 			});
@@ -108,7 +112,32 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 				if (err) {
 					callback(err);
 				} else {
-					callback(null, user);
+
+					Home.count({owner_mail: filters.email}, function (err, count) {
+
+						if (count > 0) {
+
+							Product.count({owner_mail: filters.email}, function (err, product_count) {
+
+								if (product_count > 0) {
+
+									callback(null, Utility.getLinkedObjects(user, {
+										type: "user",
+										linked_objects: ["home", "product"]
+									}));
+								} else {
+
+									callback(null, Utility.getLinkedObjects(user, {
+										type: "user",
+										linked_objects: ["home"]
+									}));
+								}
+							});
+						} else {
+
+							callback(null, user);
+						}
+					});
 				}
 			});
 			break;
@@ -118,7 +147,32 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 				if (err) {
 					callback(err);
 				} else {
-					callback(null, user);
+
+					Home.count({owner_id: filters._id}, function (err, count) {
+
+						if (count > 0) {
+
+							Product.count({owner_id: filters._id}, function (err, product_count) {
+
+								if (product_count > 0) {
+
+									callback(null, Utility.getLinkedObjects(user, {
+										type: "user",
+										linked_objects: ["home", "product"]
+									}));
+								} else {
+
+									callback(null, Utility.getLinkedObjects(user, {
+										type: "user",
+										linked_objects: ["home"]
+									}));
+								}
+							});
+						} else {
+
+							callback(null, user);
+						}
+					});
 				}
 			});
 			break;
@@ -266,7 +320,20 @@ DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginat
 				if (err) {
 					callback(err);
 				} else {
-					callback(null, home);
+
+					Product.count({home_id: filters._id}, function (err, count) {
+
+						if (count > 0) {
+
+							callback(null, Utility.getLinkedObjects(home, {
+								type: "home",
+								linked_objects: ["user", "product"]
+							}));
+						} else {
+
+							callback(null, Utility.getLinkedObjects(home, {type: "home", linked_objects: ["user"]}));
+						}
+					});
 				}
 			});
 			break;
@@ -309,7 +376,16 @@ DBConnector.prototype.getSubCategories = function (callback, filterObject, ident
 
 	switch (identifierType) {
 		case "_id":
-			callback(null, {message: "UnderConstruction"});
+			SubCategory.findById(filterObject._id, fieldsOmittedFromResponse, function (err, subCategory) {
+
+				if (err) {
+
+					callback(err);
+				} else {
+
+					callback(null, subCategory);
+				}
+			})
 			break;
 		default :
 			var query = QueryBuilder.build(SubCategory, filterObject, fieldsOmittedFromResponse);
@@ -462,7 +538,47 @@ DBConnector.prototype.getProducts = function (callback, filters, fetchType, pagi
 					callback(err);
 				} else {
 
-					callback(null, product);
+					Buzz.count({product_id: filters._id}, function (err, count) {
+
+						if (count > 0) {
+
+							product = Utility.getLinkedObjects(product, {
+								type: "product",
+								linked_objects: ["buzz"]
+							})[0];
+						}
+
+						Review.count({product_id: filters._id}, function (err, review_count) {
+
+							if (review_count > 0) {
+
+								product = Utility.getLinkedObjects(product, {
+									type: "product",
+									linked_objects: ["review"]
+								})[0];
+							}
+
+							Image.find({
+								entity_type: "product",
+								entity_id: product._id
+							}, {_id: 1}, function (err, images) {
+
+								if (product.images === undefined) {
+									product.images = [];
+								}
+								images.forEach(function (element, index) {
+
+									var image_link = {
+										href: config.service_url + "/images/" + element._id,
+										rel: "Image"
+									}
+
+									product.images.push(image_link);
+								});
+								callback(null, product);
+							});
+						});
+					});
 				}
 			});
 			break;
@@ -602,7 +718,7 @@ DBConnector.prototype.getBuzzes = function (callback, filters, fetchType, pagina
 			callback(err);
 		} else {
 
-			callback(null, buzzes);
+			callback(null, Utility.getLinkedObjects(buzzes, {type: "buzz"}));
 		}
 	});
 };
@@ -630,35 +746,35 @@ DBConnector.prototype.uploadImage = function (callback, file_path, entity_info) 
 	switch (entity_info.type) {
 
 		case "product":
-			Product.findOne({
-				_id: entity_info.id
-			}, function (err, product) {
+			Product.findById(entity_info.id, {name: 1}, function (err, product) {
 
 				if (err) {
 
 					callback(err);
+				} else {
+
+					var file_content = new Buffer(fs.readFileSync(file_path)).toString('base64');
+					var image = new Image({
+						content: file_content,
+						content_type: file_path.split(".")[1],
+						entity_type: entity_info.type,
+						entity_id: product._id
+					});
+
+					image.save(function (err, image) {
+
+						if (err) {
+
+							callback(err);
+						} else {
+
+							callback(null, _getLocation(image._id, "Image", "uploaded", "images"))
+						}
+					});
 				}
 			});
 			break;
 	}
-
-	var image = new Image();
-
-	image.data = fs.readFileSync(file_path);
-	image.content_type = file_path.split(".")[1];
-	image.entity_type = entity_info.type;
-	image.entity_id = entity_info.id;
-
-	image.save(function (err, image) {
-
-		if (err) {
-
-			callback(err);
-		} else {
-
-			callback(null, _getLocation(image._id, "Image", "uploaded", "images"))
-		}
-	})
 };
 
 DBConnector.prototype.getImages = function (callback, filters, fetchType) {

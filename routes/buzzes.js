@@ -57,9 +57,9 @@ router.route('/buzzes')
 								}
 							}
 							response.status(200).json(buzzes);
-						}, "buz");
+						}, "buzz");
 					} else {
-						errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no homes in the System.");
+						errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested buzz could not be found.");
 					}
 				}
 			}
@@ -77,7 +77,7 @@ router.route('/buzzes/:buzz_id')
 
 		if (err) {
 
-			errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested resource not found.");
+			errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested buzz could not be found.");
 		} else {
 
 			if (buzz.length > 0) {
@@ -85,7 +85,7 @@ router.route('/buzzes/:buzz_id')
 				buzz = Utility.getFormattedResponse(buzz);
 				response.status(200).json(buzz);
 			} else {
-				errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no homes in the System.");
+				errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested buzz could not be found.");
 			}
 		}
 	}, {_id: buzz_id}, "_id");
@@ -96,7 +96,7 @@ router.route('/buzzes/:buzz_id')
 
 		if (err) {
 
-			errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no homes in the System.");
+			errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "There are no Buzzes in the System.");
 		} else {
 
 			response.status(204).send();

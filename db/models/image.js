@@ -1,11 +1,10 @@
 var mongoose = require('mongoose');
 
 var imageSchema = new mongoose.Schema({
-	data: {
-		type: Buffer,
-		unique: true
+	content: {
+		type: String
 	},
-	contet_type: {
+	content_type: {
 		type: String
 	},
 	entity_type: {
@@ -15,6 +14,11 @@ var imageSchema = new mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Product'
 	}
+});
+
+imageSchema.index({
+	entity_type: 1,
+	entity_id: 1
 });
 
 module.exports = mongoose.model('Image', imageSchema);

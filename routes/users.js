@@ -46,7 +46,7 @@ router.route('/users')
 		paginationConfig.skip = page;
 		paginationConfig.limit = elementCount;
 		connector.getUsers(function (err, users) {
-			if (err) {
+	 		if (err) {
 				errorResponse.sendErrorResponse(response, 500, "Internal Server Error", "Could not fetch users.");
 			} else {
 				if (users.length > 0) {
