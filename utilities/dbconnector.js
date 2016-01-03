@@ -1,10 +1,13 @@
 var mongoose = require('mongoose');
-var User = require('../models/user');
-var Home = require('../models/home');
-var Category = require('../models/category');
-var SubCategory = require('../models/sub_category');
-var Product = require('../models/product');
-var Buzz = require('../models/buzz');
+var User = require('../db/models/user');
+var Home = require('../db/models/home');
+var Category = require('../db/models/category');
+var SubCategory = require('../db/models/sub_category');
+var Product = require('../db/models/product');
+var Buzz = require('../db/models/buzz');
+var QueryBuilder = new require('./query_builder')();
+var Image = require('../db/models/image');
+var fs = require('fs');
 
 var config = require('../config');
 var fieldsOmittedFromResponse = {
@@ -84,37 +87,11 @@ DBConnector.prototype.updateUser = function (callback, userObject, user_id, iden
 	}
 };
 
-DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginationConfig, sort_config) {
+DBConnector.prototype.getUsers = function (callback, filters, fetchType, pagination_config, sort_config) {
 
 	switch (fetchType) {
 		case "collection":
-			if (paginationConfig.limit > config.maxCount) {
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig === {}) {
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig.skip < 1) {
-				console.log("You Idiot");
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig.skip > 0) {
-				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
-			}
-			var query = User.find(filters, fieldsOmittedFromResponse, paginationConfig);
-			if (sort_config !== {} && sort_config !== undefined) {
-				var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-				var sort_params = sort_config.sort_params;
-
-				for (var index in sort_params) {
-					var sort_object = {};
-					sort_object[sort_params[index]] = sort_order;
-					query = query.sort(sort_object);
-				}
-			}
+			var query = QueryBuilder.build(User, filters, fieldsOmittedFromResponse, sort_config, pagination_config)
 			query.exec(function (err, users) {
 				if (err) {
 					callback(err);
@@ -124,9 +101,10 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 			});
 			break;
 		case "email":
-			User.find({
+			var query = QueryBuilder.build(User, {
 				email: new RegExp('^' + filters.email + '$', "i")
-			}, fieldsOmittedFromResponse, function (err, user) {
+			}, fieldsOmittedFromResponse);
+			query.exec(function (err, user) {
 				if (err) {
 					callback(err);
 				} else {
@@ -135,7 +113,8 @@ DBConnector.prototype.getUsers = function (callback, filters, fetchType, paginat
 			});
 			break;
 		case "_id":
-			User.findById(filters._id, fieldsOmittedFromResponse, function (err, user) {
+			var query = QueryBuilder.build(User, {_id: filters._id}, fieldsOmittedFromResponse);
+			query.exec(function (err, user) {
 				if (err) {
 					callback(err);
 				} else {
@@ -269,36 +248,10 @@ DBConnector.prototype.updateHome = function (callback, homeObject, home_id, iden
 	}
 };
 
-DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationConfig, sort_config) {
+DBConnector.prototype.getHomes = function (callback, filters, fetchType, pagination_config, sort_config) {
 	switch (fetchType) {
 		case "collection":
-			if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig === {}) {
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig.skip < 1) {
-				console.log("You Idiot");
-				paginationConfig.skip = config.defaultSkip;
-				paginationConfig.limit = config.defaultLimit;
-			}
-			if (paginationConfig.skip > 0) {
-				paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
-			}
-			var query = Home.find(filters, fieldsOmittedFromResponse, paginationConfig);
-			if (sort_config !== {} && sort_config !== undefined) {
-				var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-				var sort_params = sort_config.sort_params;
-
-				for (var index in sort_params) {
-					var sort_object = {};
-					sort_object[sort_params[index]] = sort_order;
-					query = query.sort(sort_object);
-				}
-			}
+			var query = QueryBuilder.build(Home, filters, fieldsOmittedFromResponse, sort_config, pagination_config);
 			query.exec(function (err, homes) {
 				if (err) {
 					callback(err);
@@ -308,7 +261,8 @@ DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginat
 			});
 			break;
 		case "_id":
-			Home.findById(filters._id, fieldsOmittedFromResponse, function (err, home) {
+			var query = QueryBuilder.build(Home, {_id: filters._id}, fieldsOmittedFromResponse);
+			query.exec(function (err, home) {
 				if (err) {
 					callback(err);
 				} else {
@@ -358,7 +312,8 @@ DBConnector.prototype.getSubCategories = function (callback, filterObject, ident
 			callback(null, {message: "UnderConstruction"});
 			break;
 		default :
-			SubCategory.find(filterObject, fieldsOmittedFromResponse, function (err, subCategories) {
+			var query = QueryBuilder.build(SubCategory, filterObject, fieldsOmittedFromResponse);
+			query.exec(function (err, subCategories) {
 				if (err) {
 					callback(err);
 				} else {
@@ -409,40 +364,45 @@ DBConnector.prototype.createCategory = function (callback, categoryObject) {
 		}
 	);
 
-}
-;
+};
 
 DBConnector.prototype.getCategories = function (callback, filters, identifierType) {
 
-	if (identifierType === "_id") {
-		Category.findOne(filters, fieldsOmittedFromResponse, function (err, category) {
-			if (err) {
-				callback(err);
-			} else {
-				selfRefObject.getSubCategories(function (err, subCategories) {
-					if (err) {
-						callback(err);
-					} else {
-						if (subCategories.length > 0) {
-							var clone = JSON.parse(JSON.stringify(category));
-							clone.sub_categories = subCategories;
-							clone = [clone];
-							callback(null, clone);
+	var query;
+	switch (identifierType) {
+		case "_id":
+			query = QueryBuilder.build(Category, filters, fieldsOmittedFromResponse);
+			query.exec(function (err, category) {
+				if (err) {
+					callback(err);
+				} else {
+					selfRefObject.getSubCategories(function (err, subCategories) {
+						if (err) {
+							callback(err);
 						} else {
-							callback(null, category);
+							if (subCategories.length > 0) {
+								var clone = JSON.parse(JSON.stringify(category));
+								clone.sub_categories = subCategories;
+								clone = [clone];
+								callback(null, clone);
+							} else {
+								callback(null, category);
+							}
 						}
-					}
-				}, filters);
-			}
-		});
-	} else {
-		Category.find(filters, fieldsOmittedFromResponse, function (err, categories) {
-			if (err) {
-				callback(err);
-			} else {
-				callback(null, categories);
-			}
-		});
+					}, filters);
+				}
+			});
+			break;
+		default:
+			query = QueryBuilder.build(Category, filters, fieldsOmittedFromResponse);
+			query.exec(function (err, categories) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(null, categories);
+				}
+			});
+			break;
 	}
 };
 
@@ -489,46 +449,36 @@ DBConnector.prototype.createProduct = function (callback, productObject) {
 	});
 };
 
-DBConnector.prototype.getProducts = function (callback, filters, fetchType, paginationConfig, sort_config) {
+DBConnector.prototype.getProducts = function (callback, filters, fetchType, pagination_config, sort_config) {
 
-	if (paginationConfig.limit !== null && paginationConfig.limit > config.maxCount) {
-		paginationConfig.skip = config.defaultSkip;
-		paginationConfig.limit = config.defaultLimit;
+	var query;
+	switch (fetchType) {
+		case "_id":
+			query = QueryBuilder.build(Product, {_id: filters._id}, fieldsOmittedFromResponse, pagination_config, sort_config);
+			query.exec(function (err, product) {
+
+				if (err) {
+
+					callback(err);
+				} else {
+
+					callback(null, product);
+				}
+			});
+			break;
+		default:
+			query = QueryBuilder.build(Product, filters, fieldsOmittedFromResponse, pagination_config, sort_config);
+			query.exec(function (err, products) {
+
+				if (err) {
+
+					callback(err);
+				} else {
+
+					callback(null, products);
+				}
+			});
 	}
-	if (paginationConfig === {}) {
-		paginationConfig.skip = config.defaultSkip;
-		paginationConfig.limit = config.defaultLimit;
-	}
-	if (paginationConfig.skip < 1) {
-		console.log("You Idiot");
-		paginationConfig.skip = config.defaultSkip;
-		paginationConfig.limit = config.defaultLimit;
-	}
-	if (paginationConfig.skip > 0) {
-		paginationConfig.skip = (paginationConfig.skip - 1) * paginationConfig.limit;
-	}
-
-	var query = Product.find(filters, fieldsOmittedFromResponse, paginationConfig);
-	if (sort_config !== {} && sort_config !== undefined) {
-		var sort_order = sort_config.order === 'ascending' ? 1 : -1;
-		var sort_params = sort_config.sort_params;
-
-		for (var index in sort_params) {
-			var sort_object = {};
-			sort_object[sort_params[index]] = sort_order;
-			query = query.sort(sort_object);
-		}
-	}
-	query.exec(function (err, products) {
-
-		if (err) {
-
-			callback(err);
-		} else {
-
-			callback(null, products);
-		}
-	});
 };
 
 DBConnector.prototype.updateProduct = function (callback, productObject) {
@@ -537,11 +487,11 @@ DBConnector.prototype.updateProduct = function (callback, productObject) {
 		productObject, {
 			new: true
 		},
-		function (err, user) {
+		function (err, product) {
 			if (err) {
 				callback(err);
 			} else {
-				callback(null, _getLocation(user._id, "product", "updated", "products"));
+				callback(null, _getLocation(product._id, "product", "updated", "products"));
 			}
 		});
 };
@@ -558,6 +508,187 @@ DBConnector.prototype.deleteProduct = function (callback, product_id) {
 			callback(null);
 		}
 	});
+};
+
+DBConnector.prototype.createBuzz = function (callback, buzzObject) {
+
+	var product_owner_id;
+	selfRefObject.getProducts(function (err, product) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			if ((product === null) || product.keys().length === 0 || product.length === 0) {
+
+				callback({});
+			} else {
+				product_owner_id = product[0].owner_id;
+				selfRefObject.getUsers(function (err, user) {
+
+					user = user[0];
+					if (err) {
+
+						callback(err);
+					} else {
+
+						if ((user === null) || user === {}) {
+
+							callback({});
+						} else {
+							var start = new Date(buzzObject.time_preference.start);
+							var end = new Date(buzzObject.time_preference.end);
+
+							if (start < end) {
+
+								if (String(product_owner_id) === String(user._id)) {
+
+									callback({});
+								} else {
+
+									var buzz = new Buzz({
+										buzzer_mail: user.email,
+										buzzer_id: user._id,
+										product_id: buzzObject.product_id,
+										product_owner_id: product_owner_id,
+										time_preference: {
+											start: start,
+											end: end
+										},
+										negotiation_price: buzzObject.negotiation_price
+									});
+
+									buzz.save(function (err, buzz) {
+
+										if (err) {
+
+											callback(err);
+										} else {
+
+											callback(null, _getLocation(buzz._id, "Buzz", "created", "buzzes"));
+										}
+									});
+								}
+							} else {
+
+								callback({});
+							}
+						}
+					}
+				}, {email: buzzObject.buzzer_mail}, "email");
+			}
+		}
+	}, {_id: buzzObject.product_id}, "_id");
+};
+
+DBConnector.prototype.getBuzzes = function (callback, filters, fetchType, pagination_config, sort_config) {
+
+	var query;
+	switch (fetchType) {
+
+		case "_id":
+
+			query = QueryBuilder.build(Buzz, filters, fieldsOmittedFromResponse);
+			break;
+		default:
+
+			query = QueryBuilder.build(Buzz, filters, fieldsOmittedFromResponse, sort_config, pagination_config);
+	}
+	query.exec(function (err, buzzes) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null, buzzes);
+		}
+	});
+};
+
+DBConnector.prototype.updateBuzz = function (callback, buzzObject) {
+
+};
+
+DBConnector.prototype.deleteBuzz = function (callback, buzz_id) {
+
+	Buzz.findOneAndRemove({_id: buzz_id}, function (err) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null);
+		}
+	});
+};
+
+DBConnector.prototype.uploadImage = function (callback, file_path, entity_info) {
+
+	switch (entity_info.type) {
+
+		case "product":
+			Product.findOne({
+				_id: entity_info.id
+			}, function (err, product) {
+
+				if (err) {
+
+					callback(err);
+				}
+			});
+			break;
+	}
+
+	var image = new Image();
+
+	image.data = fs.readFileSync(file_path);
+	image.content_type = file_path.split(".")[1];
+	image.entity_type = entity_info.type;
+	image.entity_id = entity_info.id;
+
+	image.save(function (err, image) {
+
+		if (err) {
+
+			callback(err);
+		} else {
+
+			callback(null, _getLocation(image._id, "Image", "uploaded", "images"))
+		}
+	})
+};
+
+DBConnector.prototype.getImages = function (callback, filters, fetchType) {
+
+	switch (fetchType) {
+
+		case "_id":
+			Image.findOne({_id: filters._id}, fieldsOmittedFromResponse, function (err, image) {
+
+				if (err) {
+
+					callback(err);
+				} else {
+
+					callback(null, image);
+				}
+			});
+			break;
+		default:
+			Image.find(filters, fieldsOmittedFromResponse, function (err, images) {
+
+				if (err) {
+
+					callback(err);
+				} else {
+
+					callback(null, images);
+				}
+			});
+	}
 };
 
 DBConnector.prototype.getSearchTerm = function (callback, search_terms, category) {

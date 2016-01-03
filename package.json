@@ -1,6 +1,6 @@
 {
   "name": "hile",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "scripts": {},
   "dependencies": {
@@ -9,6 +9,7 @@
     "cors": "^2.7.1",
     "express": "^4.13.3",
     "mongoose": "^4.3.1",
-    "morgan": "^1.6.1"
+    "morgan": "^1.6.1",
+    "multiparty": "^4.1.2"
   }
 }

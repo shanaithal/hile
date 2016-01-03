@@ -91,9 +91,7 @@ router.route('/subcategories')
 			} else {
 
 				if (subCategories.length > 0) {
-					response.status(200);
-					response.setHeader('content-type', 'application/json');
-					response.json(Utility.getFormattedResponse(subCategories));
+					response.status(200).json(Utility.getFormattedResponse(subCategories));
 				} else {
 					errorResponse.sendErrorResponse(response, 404, "Not Found", "There are no subcategories in the System");
 				}

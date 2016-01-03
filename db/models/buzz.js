@@ -6,7 +6,7 @@ var buzzSchema = mongoose.Schema({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User'
 	},
-	buzzer_name: {
+	buzzer_mail: {
 		type: String
 	},
 	time_preference: {

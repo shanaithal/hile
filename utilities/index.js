@@ -45,6 +45,11 @@ Utility.prototype._getFilters = function (queryParams) {
 	if (filters.order != undefined) {
 		delete filters.order;
 	}
+
+	if (filters === null) {
+
+		filters = {};
+	}
 	//var clone = JSON.parse(JSON.stringify(queryParams));
 	return filters;
 }
@@ -55,7 +60,11 @@ Utility.prototype.getNextPage = function (path, page, count) {
 	path = path.replace(/[c][o][u][n][t][=][0-9]+[&]/i, "").replace(/[c][o][u][n][t][=][0-9]+/i, "");
 	path = config.service_url + path;
 	if (path.indexOf('?') > -1) {
-		path = path + "page=" + page + "&count=" + count;
+		if (path.indexOf('?page') > -1) {
+			path = path + "page=" + page + "&count=" + count;
+		} else {
+			path = path + "&page=" + page + "&count=" + count;
+		}
 	} else {
 		path = path + "&page=" + page + "&count=" + count;
 	}

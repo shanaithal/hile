@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var connector = require('../utilities/dbconnector')();
+var connector = new require('../utilities/dbconnector')();
 var errorResponse = new require('../utilities/error_response')();
 var Utility = new require('../utilities')();
 

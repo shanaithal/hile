@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 app.use(express.static(__dirname + '/app'));
-app.get('/', function(request, response) {
+app.get('/', function (request, response) {
 	response.render('./app/index.html');
 });
 
@@ -23,7 +23,9 @@ app.use('/api', require('./routes/users'));
 app.use('/api', require('./routes/homes'));
 app.use('/api', require('./routes/categories'));
 app.use('/api', require('./routes/products'));
+app.use('/api', require('./routes/buzzes'));
 app.use('/api', require('./routes/search'));
+app.use('/api', require('./routes/images'));
 
 app.listen(PORT);
 
