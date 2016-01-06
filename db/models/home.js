@@ -16,6 +16,12 @@ var homeSchema = new mongoose.Schema({
 	},
 	owner_mail: {
 		type: String
+	},
+	home_type: {
+		type: String
+	},
+	community_name: {
+		type: String
 	}
 });
 

@@ -21,6 +21,12 @@ var userSchema = new mongoose.Schema({
 		max: 5,
 		default: 0
 	},
+	social: {
+		type: Array
+	},
+	userRole: {
+		type: String
+	},
 	createdAt: {
 		type: Date,
 		default: Date.now()

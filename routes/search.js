@@ -8,12 +8,17 @@ router.route('/search')
 	.get(function (request, response) {
 
 		var queryObject = request.query;
+		var entity = request.query.entity;
+		var query = request.query.q;
+		delete request.query.q;
+		delete request.query.entity;
 		var pageNumber = queryObject.page;
 		var elementCount = queryObject.count;
 		var sort_members = queryObject.sortby;
 		var sort_order = queryObject.order;
 		var sort_config = {sort_params: sort_members, order: sort_order};
-		var queryParams = Utility._getFilters(queryObject);
+		var filters = Utility._getFilters(queryObject);
+		var pagination_config = {skip: pageNumber, limit: elementCount};
 
 		connector.getSearchTerm(function (err, search_items) {
 
@@ -21,9 +26,11 @@ router.route('/search')
 				errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested resource could not be found");
 			} else {
 
-				response.status(200).json(Utility.getFormattedResponse(search_items));
+				search_items = Utility.getFormattedResponse(search_items);
+				search_items.data.collection_size =  search_items.data.items.length;
+				response.status(200).json(search_items);
 			}
-		}, queryParams);
+		}, query, entity, filters, pagination_config);
 	});
 
 module.exports = router;

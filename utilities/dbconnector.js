@@ -10,7 +10,7 @@ var Image = require('../db/models/image');
 var fs = require('fs');
 var Utility = new require('./')();
 var Review = require('../db/models/review');
-
+var SMSClient = new require('./sms_alert')();
 var config = require('../config');
 var fieldsOmittedFromResponse = {
 	'__v': 0,
@@ -40,7 +40,9 @@ DBConnector.prototype.createUser = function (callback, userObject) {
 		name: userObject.name,
 		email: userObject.email.toLowerCase(),
 		contact: userObject.contact,
-		rating: userObject.rating
+		rating: userObject.rating,
+		user_role: userObject.user_role,
+		social: userObject.social
 	});
 	user.save(function (err, data) {
 		if (err) {
@@ -225,7 +227,9 @@ DBConnector.prototype.createHome = function (callback, homeObject, identifierTyp
 							name: homeObject.name,
 							owner_id: owner._id,
 							owner_mail: owner.email,
-							location: homeObject.location
+							location: homeObject.location,
+							home_type: homeObject.home_type,
+							community_name: homeObject.community_name
 						});
 
 						home.save(function (err, home) {
@@ -302,7 +306,7 @@ DBConnector.prototype.updateHome = function (callback, homeObject, home_id, iden
 	}
 };
 
-DBConnector.prototype.getHomes = function (callback, filters, fetchType, pagination_config, sort_config) {
+DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationpagination_config, sort_config) {
 	switch (fetchType) {
 		case "collection":
 			var query = QueryBuilder.build(Home, filters, fieldsOmittedFromResponse, sort_config, pagination_config);
@@ -682,6 +686,7 @@ DBConnector.prototype.createBuzz = function (callback, buzzObject) {
 											callback(err);
 										} else {
 
+											SMSClient.triggerAlert(buzz);
 											callback(null, _getLocation(buzz._id, "Buzz", "created", "buzzes"));
 										}
 									});
@@ -807,30 +812,74 @@ DBConnector.prototype.getImages = function (callback, filters, fetchType) {
 	}
 };
 
-DBConnector.prototype.getSearchTerm = function (callback, search_terms, category) {
+DBConnector.prototype.getSearchTerm = function (callback, search_term, entity_type, filters, pagination_config) {
 
 	var query;
 
-	switch (category) {
+	switch (entity_type) {
 
 		case "home":
 			break;
 		case "user":
 			break;
 		default:
-			query = Product.find({$text: {$search: search_terms.q}});
+			//query = Product.find({$text: {$search: search_term}});
+			if (pagination_config.limit > config.maxCount) {
+				pagination_config.skip = config.defaultSkip;
+				pagination_config.limit = config.defaultLimit;
+			}
+			if (pagination_config === {}) {
+				pagination_config.skip = config.defaultSkip;
+				pagination_config.limit = config.defaultLimit;
+			}
+			if (pagination_config.skip < 1) {
+				pagination_config.skip = config.defaultSkip;
+				pagination_config.limit = config.defaultLimit;
+			}
+			if (pagination_config.skip > 0) {
+				pagination_config.skip = (pagination_config.skip - 1) * pagination_config.limit;
+			}
+			var regExPattern = new RegExp('.*' + search_term + '.*', 'i');
+			query = Product.find({
+				$or: [{name: {$regex: regExPattern}},
+					{description: {$regex: regExPattern}}, {category_name: {$regex: regExPattern}},
+					{sub_category_name: {$regex: regExPattern}}, {home_name: {$regex: regExPattern}},
+					{owner_mail: {$regex: regExPattern}}]
+			}, fieldsOmittedFromResponse);
 	}
 
-	query.exec(function (err, collections) {
+	query.lean().exec(function (err, resultSet) {
 
-		if (err) {
-
-			callback(err);
-		} else {
-
-			callback(null, collections);
-		}
+		callback(null, resultSet);
 	});
+	//
+	//query.exec(function (err, collections) {
+	//
+	//	if (err) {
+	//
+	//		callback(err);
+	//	} else {
+	//
+	//		var regExPattern = new RegExp('/.*' + search_term + '.*/i');
+	//		if (filters.keys !== 0) {
+	//			Product.find().and([{$or:[{name: {$regex: regExPattern}},
+	//				{description: {$regex: regExPattern}}, {category_name: {$regex: regExPattern}},
+	//				{sub_category_name: {$regex: regExPattern}}, {home_name: {$regex: regExPattern}},
+	//				{owner_mail: {$regex: regExPattern}}]},
+	//				filters]).exec(function (err, resultSet) {
+	//				callback(null, resultSet);
+	//			});
+	//		} else Product.find({$or:[{name: {$regex: regExPattern}},
+	//			{description: {$regex: regExPattern}}, {category_name: {$regex: regExPattern}},
+	//			{sub_category_name: {$regex: regExPattern}}, {home_name: {$regex: regExPattern}},
+	//			{owner_mail: {$regex: regExPattern}}]}, function (err, resultSet) {
+	//
+	//			callback(null, resultSet);
+	//		});
+	//
+	//		callback(null, collections);
+	//	}
+	//});
 }
 
 DBConnector.prototype.getCollectionCount = function (callback, collectionType) {
