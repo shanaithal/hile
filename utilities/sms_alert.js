@@ -1,32 +1,39 @@
 var config = require('../config');
 var twilio = require('twilio');
 var twilioClient = new twilio.RestClient(config.twilio.account_sid, config.twilio.auth_token);
+var User = require('../db/models/user');
 
 var SMSClient = function () {
 
 	return Object.create(SMSClient.prototype);
 }
 
-SMSClient.prototype.triggerAlert = function (smsBody) {
+SMSClient.prototype.triggerAlert = function (buzz) {
 
-	config.smsAlertNumbers.forEach(function (element, index) {
+	//config.smsAlertNumbers.forEach(function (element, index) {
+	User.findById(buzz.product_owner_id, function (err, user) {
+		if (err) {
 
-		twilioClient.sms.messages.create({
+			console.log(err);
+		} else {
+			twilioClient.sms.messages.create({
 
-			to: element,
-			from: config.twilio.from_number,
-			body: smsBody
-		}, function (err, message) {
+				to: user.contact,
+				from: config.twilio.from_number,
+				body: smsBody
+			}, function (err, message) {
 
-			if (err) {
+				if (err) {
 
-				console.log('Could not send SMS alert' + e);
-			} else {
+					console.log('Could not send SMS alert' + e);
+				} else {
 
-				console.log('SMS alert with message id ' + message.sid + " sent to " + element + " at" + message.dateCreated);
-			}
-		})
+					console.log('SMS alert with message id ' + message.sid + " sent to " + element + " at" + message.dateCreated);
+				}
+			});
+		}
 	});
+	//});
 };
 
 module.exports = SMSClient;

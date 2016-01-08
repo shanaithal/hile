@@ -23,6 +23,10 @@ var reviewSchema = mongoose.Schema({
 	product_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Product'
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now()
 	}
 });
 

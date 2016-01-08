@@ -306,7 +306,7 @@ DBConnector.prototype.updateHome = function (callback, homeObject, home_id, iden
 	}
 };
 
-DBConnector.prototype.getHomes = function (callback, filters, fetchType, paginationpagination_config, sort_config) {
+DBConnector.prototype.getHomes = function (callback, filters, fetchType, pagination_config, sort_config) {
 	switch (fetchType) {
 		case "collection":
 			var query = QueryBuilder.build(Home, filters, fieldsOmittedFromResponse, sort_config, pagination_config);
@@ -848,9 +848,24 @@ DBConnector.prototype.getSearchTerm = function (callback, search_term, entity_ty
 			}, fieldsOmittedFromResponse);
 	}
 
+	for (var key in filters.keys) {
+
+		query.where(key).equals(filters(key));
+	}
 	query.lean().exec(function (err, resultSet) {
 
-		callback(null, resultSet);
+		var pageElements = [];
+		console.log(pagination_config);
+		if (pagination_config.skip === undefined) {
+
+			pageElements.push(resultSet);
+		} else {
+
+			for (var index = pagination_config.skip; index <= pagination_config.skip * pagination_config.limit; index++) {
+				pageElements.push(resultSet[index]);
+			}
+		}
+		callback(null, pageElements, resultSet.length);
 	});
 	//
 	//query.exec(function (err, collections) {

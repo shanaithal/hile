@@ -13,6 +13,10 @@ var imageSchema = new mongoose.Schema({
 	entity_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Product'
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now()
 	}
 });
 

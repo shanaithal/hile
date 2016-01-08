@@ -20,17 +20,28 @@ router.route('/search')
 		var filters = Utility._getFilters(queryObject);
 		var pagination_config = {skip: pageNumber, limit: elementCount};
 
-		connector.getSearchTerm(function (err, search_items) {
+		connector.getSearchTerm(function (err, search_items, totalSearchResults) {
 
 			if (err) {
 				errorResponse.sendErrorResponse(response, 404, "Not Found", "The requested resource could not be found");
 			} else {
 
 				search_items = Utility.getFormattedResponse(search_items);
-				search_items.data.collection_size =  search_items.data.items.length;
+				if (totalSearchResults > elementCount) {
+					search_items.data.pages = [];
+					var lastPage = totalSearchResults / elementCount;
+					if (pageNumber < lastPage) {
+						search_items.data.pages.push(Utility.getNextPage(request.url, parseInt(pageNumber) + 1, elementCount));
+					}
+					if (pageNumber > 1) {
+						search_items.data.pages.push(Utility.getPreviousPage(request.url, parseInt(pageNumber) - 1, elementCount));
+					}
+				}
+
+				search_items.data.collection_size =  totalSearchResults;
 				response.status(200).json(search_items);
 			}
 		}, query, entity, filters, pagination_config);
-	});
+		});
 
 module.exports = router;

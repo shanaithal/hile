@@ -38,6 +38,20 @@ var productSchema = mongoose.Schema({
 	},
 	rent_rate: {
 		type: Number
+	},
+	time_preference: {
+		start: {
+			type: Date
+		},
+		end: {
+			type: Date
+		}
+	},
+	owned_from: {
+		type: Date
+	},
+	quantity: {
+		type: Number
 	}
 });
 

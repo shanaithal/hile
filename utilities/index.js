@@ -62,10 +62,10 @@ Utility.prototype.getNextPage = function (path, page, count) {
 	path = path.replace(/[c][o][u][n][t][=][0-9]+[&]/i, "").replace(/[c][o][u][n][t][=][0-9]+/i, "");
 	path = config.service_url + path;
 	if (path.indexOf('?') > -1) {
-		if (path.indexOf('?page') > -1) {
+		if (path.indexOf('?') === (path.length - 1)) {
 			path = path + "page=" + page + "&count=" + count;
 		} else {
-			path = path + "&page=" + page + "&count=" + count;
+			path = path + "page=" + page + "&count=" + count;
 		}
 	} else {
 		path = path + "&page=" + page + "&count=" + count;
