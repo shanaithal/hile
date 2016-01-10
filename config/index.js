@@ -1,6 +1,6 @@
 var config = {
-	dbHost: "mongodb://dev:dev123@ds039135.mongolab.com:39135",
-	databaseName: "heroku_t051rhj1",
+	dbHost: "mongodb://demo:demo@ds029454.mongolab.com:29454",
+	databaseName: "heroku_n6nkk9m5",
 	service_url: "https://hile.herokuapp.com/api",
 	defaultSkip: 0,
 	defaultLimit: 25,
